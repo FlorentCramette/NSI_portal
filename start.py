@@ -27,13 +27,14 @@ if __name__ == "__main__":
     workers = os.environ.get('WEB_CONCURRENCY', '3')
     
     print(f"\nStarting Gunicorn on port {port} with {workers} workers...")
-    gunicorn_cmd = (
-        f"gunicorn nsi_project.wsgi:application "
-        f"--bind 0.0.0.0:{port} "
-        f"--workers {workers} "
-        f"--timeout 120 "
-        f"--access-logfile - "
-        f"--error-logfile - "
-        f"--log-level info"
-    )
-    os.execvp("gunicorn", gunicorn_cmd.split())
+    gunicorn_cmd = [
+        "gunicorn",
+        "nsi_project.wsgi:application",
+        "--bind", f"0.0.0.0:{port}",
+        "--workers", workers,
+        "--timeout", "120",
+        "--access-logfile", "-",
+        "--error-logfile", "-",
+        "--log-level", "info"
+    ]
+    os.execvp("gunicorn", gunicorn_cmd)
