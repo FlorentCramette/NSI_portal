@@ -15,7 +15,8 @@ urlpatterns = [
     
     # Profile
     path('profile/', views.ProfileView.as_view(), name='profile'),
-    
+    path('profile/edit/', views.ProfileEditView.as_view(), name='profile_edit'),
+
     # Classroom management
     path('classroom/create/', views.ClassroomCreateView.as_view(), name='classroom_create'),
     path('classroom/<int:pk>/', views.ClassroomDetailView.as_view(), name='classroom_detail'),

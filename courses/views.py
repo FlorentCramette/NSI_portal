@@ -30,17 +30,52 @@ class CourseListView(LoginRequiredMixin, ListView):
         return context
 
 
+class CourseDetailView(LoginRequiredMixin, DetailView):
+    """View a course with its chapters"""
+    model = Course
+    template_name = 'courses/course_detail.html'
+    context_object_name = 'course'
+    slug_field = 'slug'
+    slug_url_kwarg = 'slug'
+
+    def get_queryset(self):
+        return Course.objects.filter(is_published=True).prefetch_related('chapters')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        course = self.object
+
+        # Add completion stats for each chapter
+        if user.is_student:
+            for chapter in course.chapters.all():
+                chapter.completion = chapter.get_completion_for_user(user)
+
+        return context
+
+
 class ChapterDetailView(LoginRequiredMixin, DetailView):
     """View a chapter with its content blocks and exercises"""
     model = Chapter
     template_name = 'courses/chapter_detail.html'
     context_object_name = 'chapter'
-    slug_field = 'slug'
-    slug_url_kwarg = 'slug'
     
+    def get_object(self, queryset=None):
+        """Get chapter by course_slug and chapter_slug"""
+        if queryset is None:
+            queryset = self.get_queryset()
+        
+        course_slug = self.kwargs.get('course_slug')
+        chapter_slug = self.kwargs.get('chapter_slug')
+        
+        return queryset.filter(
+            course__slug=course_slug,
+            slug=chapter_slug
+        ).first()
+
     def get_queryset(self):
         return Chapter.objects.filter(is_published=True).select_related('course')
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         chapter = self.object

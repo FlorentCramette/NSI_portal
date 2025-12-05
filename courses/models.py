@@ -10,6 +10,7 @@ class Course(models.Model):
         TERMINALE = 'TERMINALE', 'Terminale'
     
     title = models.CharField(max_length=200, verbose_name='Titre')
+    slug = models.SlugField(max_length=200, unique=True, blank=True, verbose_name='Slug')
     level = models.CharField(
         max_length=10,
         choices=Level.choices,
@@ -25,11 +26,14 @@ class Course(models.Model):
         verbose_name = 'Cours'
         verbose_name_plural = 'Cours'
         ordering = ['level', 'order']
-    
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.title)
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"{self.get_level_display()} - {self.title}"
-
-
 class Chapter(models.Model):
     """A chapter within a course"""
     

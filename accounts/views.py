@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
-from django.views.generic import CreateView, DetailView, TemplateView, FormView, View
+from django.views.generic import CreateView, DetailView, TemplateView, FormView, View, UpdateView
 from django.urls import reverse_lazy
 from .models import User, Classroom, Enrollment
 from .forms import StudentRegistrationForm, TeacherRegistrationForm, JoinClassroomForm, ClassroomCreateForm
@@ -40,9 +40,10 @@ class ProfileView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
-        
+
         context['user'] = user
-        
+        context['profile_user'] = user
+
         if user.is_student:
             context['classrooms'] = Classroom.objects.filter(enrollments__user=user)
             context['total_attempts'] = user.attempts.count()
@@ -116,9 +117,24 @@ class JoinClassroomView(LoginRequiredMixin, FormView):
         return super().form_valid(form)
 
 
+class ProfileEditView(LoginRequiredMixin, UpdateView):
+    """Edit user profile"""
+    model = User
+    fields = ['pseudo', 'email']
+    template_name = 'accounts/profile_edit.html'
+    success_url = '/accounts/profile/'
+
+    def get_object(self, queryset=None):
+        return self.request.user
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Profil mis à jour avec succès !')
+        return super().form_valid(form)
+
+
 class LeaveClassroomView(LoginRequiredMixin, View):
     """Student leaves a classroom"""
-    
+
     def post(self, request, pk):
         classroom = get_object_or_404(Classroom, pk=pk)
         enrollment = get_object_or_404(Enrollment, user=request.user, classroom=classroom)
