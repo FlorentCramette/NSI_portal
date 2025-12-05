@@ -18,6 +18,19 @@ if __name__ == "__main__":
     # Run migrations
     run_command("python manage.py migrate --noinput")
     
+    # Create superuser if it doesn't exist
+    if os.environ.get('DJANGO_SUPERUSER_USERNAME'):
+        print("\nCreating superuser if it doesn't exist...")
+        result = subprocess.run(
+            "python manage.py createsuperuser --noinput",
+            shell=True,
+            capture_output=True
+        )
+        if result.returncode == 0:
+            print("✅ Superuser created successfully")
+        else:
+            print("ℹ️ Superuser might already exist or creation skipped")
+    
     # Collect static files
     print("\nCollecting static files...")
     run_command("python manage.py collectstatic --noinput --clear")
