@@ -21,8 +21,12 @@ COPY . .
 # Collect static files (will run during deployment)
 RUN python manage.py collectstatic --noinput --clear
 
+# Copy and set permissions for start script
+COPY start.sh .
+RUN chmod +x start.sh
+
 # Expose port
 EXPOSE 8000
 
 # Start command
-CMD python manage.py migrate && gunicorn nsi_project.wsgi:application --bind 0.0.0.0:$PORT --workers 3 --timeout 120
+CMD ["./start.sh"]
