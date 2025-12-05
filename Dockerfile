@@ -18,9 +18,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy project files
 COPY . .
 
-# Collect static files (will run during deployment)
-RUN python manage.py collectstatic --noinput --clear
-
 # Copy and set permissions for start script
 COPY start.sh .
 RUN chmod +x start.sh
