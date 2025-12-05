@@ -54,9 +54,12 @@
                                     <a href="{% url 'accounts:profile' %}" class="text-white hover:bg-indigo-500 px-3 py-2 rounded-md text-sm font-medium">
                                         Profil
                                     </a>
-                                    <a href="{% url 'accounts:logout' %}" class="text-white hover:bg-indigo-500 px-3 py-2 rounded-md text-sm font-medium">
-                                        Déconnexion
-                                    </a>
+                                    <form method="post" action="{% url 'accounts:logout' %}" class="inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="text-white hover:bg-indigo-500 px-3 py-2 rounded-md text-sm font-medium">
+                                            Déconnexion
+                                        </button>
+                                    </form>
                                 </div>
                             {% else %}
                                 <a href="{% url 'accounts:login' %}" class="text-white hover:bg-indigo-500 px-3 py-2 rounded-md text-sm font-medium">
