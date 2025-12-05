@@ -20,16 +20,49 @@ if __name__ == "__main__":
     
     # Create superuser if it doesn't exist
     if os.environ.get('DJANGO_SUPERUSER_USERNAME'):
-        print("\nCreating superuser if it doesn't exist...")
+        print("\nCreating/updating superuser...")
+        # Use Django management command with proper environment
         result = subprocess.run(
-            "python manage.py createsuperuser --noinput",
-            shell=True,
-            capture_output=True
+            [
+                "python", "manage.py", "shell", "-c",
+                """
+from accounts.models import User
+username = '{username}'
+email = '{email}'
+password = '{password}'
+
+user, created = User.objects.get_or_create(
+    username=username,
+    defaults={{'email': email, 'is_student': False, 'is_teacher': True}}
+)
+if created:
+    user.set_password(password)
+    user.is_superuser = True
+    user.is_staff = True
+    user.save()
+    print('✅ Superuser created successfully')
+else:
+    # Update existing user to ensure it's a superuser
+    user.is_superuser = True
+    user.is_staff = True
+    user.is_student = False
+    user.is_teacher = True
+    user.set_password(password)
+    user.save()
+    print('✅ Superuser updated successfully')
+                """.format(
+                    username=os.environ.get('DJANGO_SUPERUSER_USERNAME'),
+                    email=os.environ.get('DJANGO_SUPERUSER_EMAIL'),
+                    password=os.environ.get('DJANGO_SUPERUSER_PASSWORD')
+                )
+            ],
+            capture_output=True,
+            text=True
         )
-        if result.returncode == 0:
-            print("✅ Superuser created successfully")
-        else:
-            print("ℹ️ Superuser might already exist or creation skipped")
+        if result.stdout:
+            print(result.stdout)
+        if result.returncode != 0 and result.stderr:
+            print(f"⚠️ Superuser creation warning: {result.stderr}")
     
     # Collect static files
     print("\nCollecting static files...")
