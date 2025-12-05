@@ -18,12 +18,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy project files
 COPY . .
 
-# Copy and set permissions for start script
-COPY start.sh .
-RUN chmod +x start.sh
-
 # Expose port
 EXPOSE 8000
 
 # Start command
-CMD ["./start.sh"]
+CMD ["python", "start.py"]
