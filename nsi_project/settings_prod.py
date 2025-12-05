@@ -20,6 +20,14 @@ if railway_url:
 ALLOWED_HOSTS.extend(os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,.railway.app').split(','))
 ALLOWED_HOSTS = [h.strip() for h in ALLOWED_HOSTS if h.strip()]
 
+# CSRF trusted origins for Railway
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.railway.app',
+    'https://web-production-b8f92.up.railway.app',
+]
+if railway_url:
+    CSRF_TRUSTED_ORIGINS.append(railway_url)
+
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
