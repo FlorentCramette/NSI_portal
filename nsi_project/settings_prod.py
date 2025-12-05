@@ -3,6 +3,7 @@ Production settings for Railway deployment
 """
 import os
 from pathlib import Path
+import dj_database_url
 
 # Build paths
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -76,8 +77,6 @@ TEMPLATES = [
 WSGI_APPLICATION = 'nsi_project.wsgi.application'
 
 # Database - PostgreSQL sur Railway
-import dj_database_url
-
 DATABASES = {
     'default': dj_database_url.config(
         default=os.environ.get('DATABASE_URL'),
