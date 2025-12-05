@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}Modifier mon profil - Portail NSI{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white shadow-md rounded-lg p-6">
+        <h1 class="text-3xl font-bold text-gray-900 mb-6">Modifier mon profil</h1>
+        
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            
+            {% if form.errors %}
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                    <strong class="font-bold">Erreurs :</strong>
+                    <ul class="list-disc list-inside mt-2">
+                        {% for field, errors in form.errors.items %}
+                            {% for error in errors %}
+                                <li>{{ field }} : {{ error }}</li>
+                            {% endfor %}
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+            
+            <div>
+                <label for="{{ form.pseudo.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    Pseudo
+                </label>
+                {{ form.pseudo }}
+                {% if form.pseudo.help_text %}
+                    <p class="mt-1 text-sm text-gray-500">{{ form.pseudo.help_text }}</p>
+                {% endif %}
+            </div>
+            
+            <div>
+                <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    Email
+                </label>
+                {{ form.email }}
+                {% if form.email.help_text %}
+                    <p class="mt-1 text-sm text-gray-500">{{ form.email.help_text }}</p>
+                {% endif %}
+            </div>
+            
+            <div class="flex items-center justify-between pt-4">
+                <a href="{% url 'accounts:profile' %}" class="text-gray-600 hover:text-gray-900 font-medium">
+                    Annuler
+                </a>
+                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg transition duration-200">
+                    Enregistrer les modifications
+                </button>
+            </div>
+        </form>
+        
+        <div class="mt-8 pt-6 border-t border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">Changer le mot de passe</h2>
+            <a href="{% url 'accounts:password_change' %}" class="inline-block bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg transition duration-200">
+                Modifier mon mot de passe
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    input[type="text"],
+    input[type="email"] {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+        font-size: 1rem;
+    }
+    
+    input[type="text"]:focus,
+    input[type="email"]:focus {
+        outline: none;
+        border-color: #4f46e5;
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    }
+</style>
+{% endblock %}
