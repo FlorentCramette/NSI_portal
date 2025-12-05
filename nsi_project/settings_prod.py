@@ -24,9 +24,9 @@ ALLOWED_HOSTS = [h.strip() for h in ALLOWED_HOSTS if h.strip()]
 # CSRF trusted origins for Railway
 CSRF_TRUSTED_ORIGINS = [
     'https://*.railway.app',
-    'https://web-production-b8f92.up.railway.app',
 ]
-if railway_url:
+railway_url = os.environ.get('RAILWAY_STATIC_URL', '')
+if railway_url and railway_url.startswith(('http://', 'https://')):
     CSRF_TRUSTED_ORIGINS.append(railway_url)
 
 # Application definition
