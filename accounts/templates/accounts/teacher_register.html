@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block title %}Inscription Professeur - Portail NSI{% endblock %}
+
+{% block content %}
+<div class="flex min-h-full flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div class="sm:mx-auto sm:w-full sm:max-w-md">
+        <h2 class="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
+            Créer un compte professeur
+        </h2>
+        <p class="mt-2 text-center text-sm text-gray-600">
+            Ou
+            <a href="{% url 'accounts:login' %}" class="font-medium text-indigo-600 hover:text-indigo-500">
+                connectez-vous
+            </a>
+        </p>
+    </div>
+
+    <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+            <form class="space-y-6" method="post">
+                {% csrf_token %}
+                
+                <div>
+                    <label for="id_username" class="block text-sm font-medium text-gray-700">
+                        Nom d'utilisateur *
+                    </label>
+                    <div class="mt-1">
+                        {{ form.username }}
+                    </div>
+                    {% if form.username.errors %}
+                        <p class="mt-2 text-sm text-red-600">{{ form.username.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label for="id_email" class="block text-sm font-medium text-gray-700">
+                        Email professionnel *
+                    </label>
+                    <div class="mt-1">
+                        {{ form.email }}
+                    </div>
+                    {% if form.email.errors %}
+                        <p class="mt-2 text-sm text-red-600">{{ form.email.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="id_first_name" class="block text-sm font-medium text-gray-700">
+                            Prénom *
+                        </label>
+                        <div class="mt-1">
+                            {{ form.first_name }}
+                        </div>
+                        {% if form.first_name.errors %}
+                            <p class="mt-2 text-sm text-red-600">{{ form.first_name.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label for="id_last_name" class="block text-sm font-medium text-gray-700">
+                            Nom *
+                        </label>
+                        <div class="mt-1">
+                            {{ form.last_name }}
+                        </div>
+                        {% if form.last_name.errors %}
+                            <p class="mt-2 text-sm text-red-600">{{ form.last_name.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div>
+                    <label for="id_password1" class="block text-sm font-medium text-gray-700">
+                        Mot de passe *
+                    </label>
+                    <div class="mt-1">
+                        {{ form.password1 }}
+                    </div>
+                    {% if form.password1.errors %}
+                        <p class="mt-2 text-sm text-red-600">{{ form.password1.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label for="id_password2" class="block text-sm font-medium text-gray-700">
+                        Confirmer le mot de passe *
+                    </label>
+                    <div class="mt-1">
+                        {{ form.password2 }}
+                    </div>
+                    {% if form.password2.errors %}
+                        <p class="mt-2 text-sm text-red-600">{{ form.password2.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <button type="submit" class="flex w-full justify-center rounded-md border border-transparent bg-green-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                        Créer mon compte professeur
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

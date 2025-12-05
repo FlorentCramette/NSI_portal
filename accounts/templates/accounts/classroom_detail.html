@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% load custom_tags %}
+
+{% block title %}{{ classroom.name }} - NSI Portal{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+    <!-- Classroom header -->
+    <div class="bg-white rounded-lg shadow-md p-8 mb-8">
+        <div class="flex items-start justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ classroom.name }}</h1>
+                <p class="text-gray-600 text-lg mb-4">{{ classroom.school_name }}</p>
+                <div class="flex items-center gap-4 text-sm text-gray-600">
+                    <span>👨‍🏫 {{ classroom.teacher.get_full_name|default:classroom.teacher.username }}</span>
+                    <span>👥 {{ classroom.students.count }} élève{{ classroom.students.count|pluralize }}</span>
+                </div>
+            </div>
+            
+            {% if user == classroom.teacher %}
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div class="text-sm text-gray-600 mb-1">Code de la classe</div>
+                <div class="text-3xl font-bold font-mono text-blue-600">{{ classroom.join_code }}</div>
+                <div class="text-xs text-gray-500 mt-2">Partagez ce code avec vos élèves</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if user == classroom.teacher %}
+    <!-- Teacher view: Statistics -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="text-3xl font-bold text-blue-600 mb-2">{{ classroom.students.count }}</div>
+            <div class="text-sm text-gray-600">Élèves</div>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="text-3xl font-bold text-purple-600 mb-2">{{ total_attempts }}</div>
+            <div class="text-sm text-gray-600">Tentatives</div>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="text-3xl font-bold text-green-600 mb-2">{{ success_rate }}%</div>
+            <div class="text-sm text-gray-600">Taux de réussite</div>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="text-3xl font-bold text-yellow-600 mb-2">{{ avg_xp|floatformat:0 }}</div>
+            <div class="text-sm text-gray-600">XP moyen</div>
+        </div>
+    </div>
+
+    <!-- Students list -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden mb-8">
+        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+            <h2 class="text-xl font-bold text-gray-900">Liste des élèves</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Élève</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Niveau</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">XP</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Exercices réussis</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Taux de réussite</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dernière activité</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for student in students %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold">
+                                    {{ student.pseudo|default:student.username|slice:":1"|upper }}
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-900">
+                                        {{ student.pseudo|default:student.username }}
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                Niveau {{ student.level }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-semibold text-gray-900">{{ student.xp }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">{{ student.exercises_solved }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">{{ student.success_rate }}%</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {% if student.last_attempt %}
+                                {{ student.last_attempt.submitted_at|date:"d/m/Y H:i" }}
+                            {% else %}
+                                Jamais
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            <a href="{% url 'accounts:profile' student.id %}" 
+                               class="text-blue-600 hover:text-blue-900">
+                                Voir profil
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="px-6 py-12 text-center text-gray-500">
+                            Aucun élève inscrit dans cette classe
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Assigned chapters -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xl font-bold text-gray-900">Chapitres assignés</h2>
+            <a href="{% url 'courses:assign_chapter' classroom.id %}" 
+               class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                + Assigner un chapitre
+            </a>
+        </div>
+        <div class="space-y-3">
+            {% for assignment in assignments %}
+            <div class="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
+                <div>
+                    <div class="font-semibold text-gray-900">{{ assignment.chapter.title }}</div>
+                    <div class="text-sm text-gray-600">
+                        {{ assignment.chapter.course.title }} • 
+                        Assigné le {{ assignment.assigned_at|date:"d/m/Y" }}
+                    </div>
+                </div>
+                <a href="{% url 'courses:chapter_detail' assignment.chapter.course.slug assignment.chapter.slug %}"
+                   class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
+                    Voir
+                </a>
+            </div>
+            {% empty %}
+            <p class="text-gray-500 py-4">Aucun chapitre assigné</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    {% else %}
+    <!-- Student view: Leaderboard link -->
+    <div class="text-center">
+        <a href="{% url 'gamification:leaderboard' %}?classroom={{ classroom.id }}"
+           class="inline-block px-6 py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-white font-bold rounded-lg hover:shadow-lg transition">
+            🏆 Voir le classement de la classe
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

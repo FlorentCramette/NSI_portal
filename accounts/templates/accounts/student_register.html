@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block title %}Inscription Élève - Portail NSI{% endblock %}
+
+{% block content %}
+<div class="flex min-h-full flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div class="sm:mx-auto sm:w-full sm:max-w-md">
+        <h2 class="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
+            Créer un compte élève
+        </h2>
+        <p class="mt-2 text-center text-sm text-gray-600">
+            Ou
+            <a href="{% url 'accounts:login' %}" class="font-medium text-indigo-600 hover:text-indigo-500">
+                connectez-vous
+            </a>
+        </p>
+    </div>
+
+    <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+            <form class="space-y-6" method="post">
+                {% csrf_token %}
+                
+                <div>
+                    <label for="id_username" class="block text-sm font-medium text-gray-700">
+                        Nom d'utilisateur *
+                    </label>
+                    <div class="mt-1">
+                        {{ form.username }}
+                    </div>
+                    {% if form.username.errors %}
+                        <p class="mt-2 text-sm text-red-600">{{ form.username.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label for="id_pseudo" class="block text-sm font-medium text-gray-700">
+                        Pseudo *
+                    </label>
+                    <div class="mt-1">
+                        {{ form.pseudo }}
+                    </div>
+                    {% if form.pseudo.errors %}
+                        <p class="mt-2 text-sm text-red-600">{{ form.pseudo.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label for="id_password1" class="block text-sm font-medium text-gray-700">
+                        Mot de passe *
+                    </label>
+                    <div class="mt-1">
+                        {{ form.password1 }}
+                    </div>
+                    {% if form.password1.errors %}
+                        <p class="mt-2 text-sm text-red-600">{{ form.password1.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label for="id_password2" class="block text-sm font-medium text-gray-700">
+                        Confirmer le mot de passe *
+                    </label>
+                    <div class="mt-1">
+                        {{ form.password2 }}
+                    </div>
+                    {% if form.password2.errors %}
+                        <p class="mt-2 text-sm text-red-600">{{ form.password2.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label for="id_join_code" class="block text-sm font-medium text-gray-700">
+                        Code de classe (optionnel)
+                    </label>
+                    <div class="mt-1">
+                        {{ form.join_code }}
+                    </div>
+                    <p class="mt-1 text-sm text-gray-500">Vous pourrez rejoindre une classe plus tard</p>
+                </div>
+
+                <div>
+                    <button type="submit" class="flex w-full justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                        Créer mon compte
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

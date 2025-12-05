@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+
+{% block title %}Tableau de bord - Portail NSI{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-6 lg:px-8">
+    <div class="sm:flex sm:items-center">
+        <div class="sm:flex-auto">
+            <h1 class="text-3xl font-bold text-gray-900">
+                Bonjour, {{ user.pseudo|default:user.username }} ! 👋
+            </h1>
+            <p class="mt-2 text-sm text-gray-700">
+                {% if user.is_student %}
+                Bienvenue sur votre tableau de bord élève
+                {% elif user.is_teacher %}
+                Bienvenue sur votre tableau de bord professeur
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
+    {% if user.is_student %}
+    <!-- Student Dashboard -->
+    <div class="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <!-- XP Card -->
+        <div class="overflow-hidden rounded-lg bg-white shadow">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="rounded-md bg-indigo-500 p-3">
+                            <i class="fas fa-star text-white text-2xl"></i>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="truncate text-sm font-medium text-gray-500">XP Total</dt>
+                            <dd class="text-lg font-semibold text-gray-900">{{ user.xp }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Level Card -->
+        <div class="overflow-hidden rounded-lg bg-white shadow">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="rounded-md bg-green-500 p-3">
+                            <i class="fas fa-level-up-alt text-white text-2xl"></i>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="truncate text-sm font-medium text-gray-500">Niveau</dt>
+                            <dd class="text-lg font-semibold text-gray-900">{{ user.level }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Badges Card -->
+        <div class="overflow-hidden rounded-lg bg-white shadow">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="rounded-md bg-yellow-500 p-3">
+                            <i class="fas fa-trophy text-white text-2xl"></i>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="truncate text-sm font-medium text-gray-500">Badges</dt>
+                            <dd class="text-lg font-semibold text-gray-900">{{ user.earned_badges.count }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Exercises Card -->
+        <div class="overflow-hidden rounded-lg bg-white shadow">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="rounded-md bg-purple-500 p-3">
+                            <i class="fas fa-check-circle text-white text-2xl"></i>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="truncate text-sm font-medium text-gray-500">Exercices réussis</dt>
+                            <dd class="text-lg font-semibold text-gray-900">{{ user.attempts.filter(passed=True).values('exercise').distinct.count }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="mt-8">
+        <h2 class="text-lg font-semibold text-gray-900">Actions rapides</h2>
+        <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <a href="{% url 'courses:course_list' %}" class="relative block rounded-lg border border-gray-300 bg-white px-6 py-4 shadow-sm hover:border-gray-400">
+                <div class="flex items-center">
+                    <i class="fas fa-book text-indigo-600 text-2xl"></i>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-900">Parcourir les cours</p>
+                    </div>
+                </div>
+            </a>
+            <a href="{% url 'accounts:classroom_join' %}" class="relative block rounded-lg border border-gray-300 bg-white px-6 py-4 shadow-sm hover:border-gray-400">
+                <div class="flex items-center">
+                    <i class="fas fa-users text-green-600 text-2xl"></i>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-900">Rejoindre une classe</p>
+                    </div>
+                </div>
+            </a>
+            <a href="{% url 'gamification:leaderboard' %}" class="relative block rounded-lg border border-gray-300 bg-white px-6 py-4 shadow-sm hover:border-gray-400">
+                <div class="flex items-center">
+                    <i class="fas fa-chart-bar text-yellow-600 text-2xl"></i>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-900">Voir le classement</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    {% elif user.is_teacher %}
+    <!-- Teacher Dashboard -->
+    <div class="mt-8">
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <!-- Classes -->
+            <div class="bg-white shadow rounded-lg p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-semibold text-gray-900">Mes classes</h2>
+                    <a href="{% url 'accounts:classroom_create' %}" class="text-sm text-indigo-600 hover:text-indigo-500">
+                        + Créer une classe
+                    </a>
+                </div>
+                {% if user.classrooms_taught.exists %}
+                    <div class="space-y-4">
+                        {% for classroom in user.classrooms_taught.all %}
+                        <a href="{% url 'accounts:classroom_detail' classroom.pk %}" class="block p-4 border border-gray-200 rounded-lg hover:border-indigo-500">
+                            <h3 class="font-semibold text-gray-900">{{ classroom.name }}</h3>
+                            <p class="text-sm text-gray-500">{{ classroom.school_name }}</p>
+                            <p class="text-sm text-gray-500 mt-2">Code : <span class="font-mono font-bold">{{ classroom.join_code }}</span></p>
+                            <p class="text-sm text-gray-500">{{ classroom.enrollments.count }} élève(s)</p>
+                        </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-gray-500 text-sm">Vous n'avez pas encore créé de classe.</p>
+                {% endif %}
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="bg-white shadow rounded-lg p-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Statistiques</h2>
+                <div class="space-y-4">
+                    <div>
+                        <p class="text-sm text-gray-500">Nombre de classes</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ user.classrooms_taught.count }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Nombre total d'élèves</p>
+                        <p class="text-2xl font-bold text-gray-900">
+                            {% load custom_tags %}
+                            {{ user.classrooms_taught.all|total_students }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

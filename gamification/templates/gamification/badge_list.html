@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% load custom_tags %}
+
+{% block title %}Mes Badges - NSI Portal{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">Collection de Badges</h1>
+        <p class="text-gray-600">Débloquez des badges en progressant dans vos cours</p>
+    </div>
+
+    <!-- User stats -->
+    <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-6 text-white mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div class="text-center">
+                <div class="text-3xl font-bold">{{ user.level }}</div>
+                <div class="text-sm opacity-80">Niveau</div>
+            </div>
+            <div class="text-center">
+                <div class="text-3xl font-bold">{{ user.xp }}</div>
+                <div class="text-sm opacity-80">XP Total</div>
+            </div>
+            <div class="text-center">
+                <div class="text-3xl font-bold">{{ earned_badges.count }}</div>
+                <div class="text-sm opacity-80">Badges obtenus</div>
+            </div>
+            <div class="text-center">
+                <div class="text-3xl font-bold">{{ user.achievements.count }}</div>
+                <div class="text-sm opacity-80">Succès débloqués</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Badges grid -->
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+        {% for badge in badges %}
+        <div class="bg-white rounded-lg shadow-md p-6 text-center {% if badge.id in earned_badge_ids %}ring-2 ring-yellow-400{% else %}opacity-50{% endif %} hover:shadow-lg transition">
+            <div class="text-6xl mb-3">{{ badge.icon }}</div>
+            <h3 class="font-bold text-gray-900 mb-1">{{ badge.name }}</h3>
+            <p class="text-sm text-gray-600 mb-3">{{ badge.description }}</p>
+            
+            {% if badge.id in earned_badge_ids %}
+                <div class="text-xs text-green-600 font-semibold">
+                    ✓ Obtenu
+                </div>
+                {% with user_badge=user.earned_badges.filter|filter:"badge=badge"|first %}
+                {% if user_badge %}
+                <div class="text-xs text-gray-500 mt-1">
+                    {{ user_badge.earned_at|date:"d/m/Y" }}
+                </div>
+                {% endif %}
+                {% endwith %}
+            {% else %}
+                <div class="text-xs text-gray-500">
+                    Requis: {{ badge.xp_requirement }} XP
+                </div>
+                {% with remaining=badge.xp_requirement|add:"-user.xp" %}
+                {% if remaining > 0 %}
+                <div class="mt-2 w-full bg-gray-200 rounded-full h-2">
+                    {% widthratio user.xp badge.xp_requirement 100 as progress %}
+                    <div class="bg-blue-600 h-2 rounded-full" style="width: {{ progress }}%"></div>
+                </div>
+                <div class="text-xs text-gray-500 mt-1">
+                    Encore {{ remaining }} XP
+                </div>
+                {% endif %}
+                {% endwith %}
+            {% endif %}
+        </div>
+        {% empty %}
+        <div class="col-span-5 text-center py-12">
+            <p class="text-gray-500">Aucun badge disponible</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Achievements section -->
+    <div class="mt-12">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">Succès</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {% for achievement in achievements %}
+            {% with is_earned=achievement.id in earned_achievement_ids %}
+            <div class="bg-white rounded-lg shadow-md p-4 flex items-center gap-4 {% if is_earned %}ring-2 ring-green-400{% else %}opacity-50{% endif %}">
+                <div class="text-4xl">{{ achievement.icon }}</div>
+                <div class="flex-1">
+                    <h3 class="font-bold text-gray-900">{{ achievement.name }}</h3>
+                    <p class="text-sm text-gray-600">{{ achievement.description }}</p>
+                </div>
+                <div class="text-right">
+                    {% if is_earned %}
+                        <div class="text-green-600 font-semibold text-sm">✓ Obtenu</div>
+                        <div class="text-xs text-gray-500">+{{ achievement.xp_reward }} XP</div>
+                    {% else %}
+                        <div class="text-gray-400 text-sm">Verrouillé</div>
+                        <div class="text-xs text-gray-500">{{ achievement.xp_reward }} XP</div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endwith %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

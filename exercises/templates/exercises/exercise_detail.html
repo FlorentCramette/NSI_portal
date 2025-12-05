@@ -1,0 +1,265 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ exercise.title }} - Portail NSI{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-6 lg:px-8">
+    <!-- Breadcrumb -->
+    <nav class="flex mb-4" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center space-x-1 md:space-x-3">
+            <li><a href="{% url 'courses:course_list' %}" class="text-gray-700 hover:text-gray-900">Cours</a></li>
+            <li><span class="mx-2 text-gray-400">/</span></li>
+            <li><a href="{% url 'courses:chapter_detail' exercise.chapter.slug %}" class="text-gray-700 hover:text-gray-900">{{ exercise.chapter.title }}</a></li>
+            <li><span class="mx-2 text-gray-400">/</span></li>
+            <li class="text-gray-500">{{ exercise.title }}</li>
+        </ol>
+    </nav>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Left: Statement -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h1 class="text-2xl font-bold text-gray-900">{{ exercise.title }}</h1>
+                <span class="inline-flex items-center rounded-md bg-indigo-100 px-2.5 py-0.5 text-sm font-medium text-indigo-800">
+                    {{ exercise.get_type_display }}
+                </span>
+            </div>
+
+            <div class="prose max-w-none mb-6">
+                {{ exercise.statement_markdown|safe }}
+            </div>
+
+            <div class="border-t pt-4">
+                <p class="text-sm text-gray-600">
+                    <i class="fas fa-star text-yellow-500"></i> Récompense : <strong>{{ exercise.xp_reward }} XP</strong>
+                </p>
+                <p class="text-sm text-gray-600 mt-2">
+                    <i class="fas fa-chart-line text-green-500"></i> Taux de réussite : <strong>{{ exercise.get_success_rate }}%</strong>
+                </p>
+            </div>
+
+            <!-- Hints -->
+            {% if hints %}
+            <div class="mt-6 border-t pt-4">
+                <h3 class="text-lg font-semibold text-gray-900 mb-3">Indices</h3>
+                <div class="space-y-2">
+                    {% for hint in hints %}
+                    <div class="border border-gray-200 rounded p-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-medium">Indice #{{ forloop.counter }}</span>
+                            {% if hint.id in used_hints %}
+                                <button class="text-xs text-gray-500" onclick="showHint({{ hint.id }})">
+                                    <i class="fas fa-eye"></i> Voir
+                                </button>
+                            {% else %}
+                                <button class="text-xs text-indigo-600 hover:text-indigo-700" onclick="useHint({{ hint.id }}, {{ hint.xp_cost }})">
+                                    <i class="fas fa-lightbulb"></i> Utiliser (-{{ hint.xp_cost }} XP)
+                                </button>
+                            {% endif %}
+                        </div>
+                        <div id="hint-{{ hint.id }}" class="hidden mt-2 text-sm text-gray-600"></div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Right: Code Editor -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">
+                {% if exercise.type == 'PYTHON' %}
+                    <i class="fab fa-python text-blue-500"></i> Éditeur Python
+                {% elif exercise.type == 'SQL' %}
+                    <i class="fas fa-database text-green-500"></i> Éditeur SQL
+                {% endif %}
+            </h2>
+
+            <div class="mb-4">
+                <textarea id="code-editor" class="w-full h-64 p-3 font-mono text-sm border border-gray-300 rounded focus:ring-indigo-500 focus:border-indigo-500" placeholder="Écrivez votre code ici...">{{ exercise.starter_code }}</textarea>
+            </div>
+
+            <div class="flex space-x-3 mb-4">
+                <button onclick="runCode()" class="flex-1 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition">
+                    <i class="fas fa-play"></i> Exécuter
+                </button>
+                <button onclick="testCode()" class="flex-1 bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition">
+                    <i class="fas fa-check"></i> Tester
+                </button>
+            </div>
+
+            <!-- Output -->
+            <div id="output-container" class="hidden">
+                <h3 class="text-sm font-semibold text-gray-700 mb-2">Sortie :</h3>
+                <pre id="output" class="bg-gray-50 border border-gray-300 rounded p-3 text-sm overflow-auto max-h-48"></pre>
+            </div>
+
+            <!-- Test Results -->
+            <div id="test-results" class="hidden mt-4">
+                <h3 class="text-sm font-semibold text-gray-700 mb-2">Résultats des tests :</h3>
+                <div id="test-list" class="space-y-2"></div>
+            </div>
+
+            <!-- Success Message -->
+            <div id="success-message" class="hidden mt-4 p-4 bg-green-50 border border-green-200 rounded">
+                <p class="text-green-800 font-semibold">
+                    <i class="fas fa-check-circle"></i> Exercice réussi !
+                </p>
+                <p class="text-green-700 text-sm mt-1">
+                    Vous avez gagné <strong id="xp-gained">0</strong> XP !
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Previous Attempts -->
+    {% if attempts %}
+    <div class="mt-8 bg-white shadow rounded-lg p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Vos tentatives précédentes</h2>
+        <div class="space-y-2">
+            {% for attempt in attempts %}
+            <div class="flex items-center justify-between p-3 border border-gray-200 rounded">
+                <div class="flex items-center space-x-3">
+                    {% if attempt.passed %}
+                        <i class="fas fa-check-circle text-green-500"></i>
+                    {% else %}
+                        <i class="fas fa-times-circle text-red-500"></i>
+                    {% endif %}
+                    <span class="text-sm">Score : {{ attempt.score }}%</span>
+                </div>
+                <span class="text-xs text-gray-500">{{ attempt.created_at|date:"d/m/Y H:i" }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sql.js@1.8.0/dist/sql-wasm.js"></script>
+<script src="{% static 'js/code_execution.js' %}"></script>
+
+<script>
+const exerciseId = {{ exercise.id }};
+const exerciseType = "{{ exercise.type }}";
+const testsDefinition = {{ exercise.tests_definition|safe }};
+
+async function runCode() {
+    const code = document.getElementById('code-editor').value;
+    const outputContainer = document.getElementById('output-container');
+    const output = document.getElementById('output');
+    
+    outputContainer.classList.remove('hidden');
+    output.textContent = 'Exécution en cours...';
+    
+    try {
+        if (exerciseType === 'PYTHON') {
+            const result = await runPythonCode(code);
+            if (result.success) {
+                output.textContent = result.output || '(pas de sortie)';
+            } else {
+                output.textContent = 'Erreur: ' + result.error;
+                output.classList.add('text-red-600');
+            }
+        } else if (exerciseType === 'SQL') {
+            if (!window.dbInitialized) {
+                await initDatabase(testsDefinition.schema);
+                window.dbInitialized = true;
+            }
+            const result = await runSQLQuery(code);
+            if (result.success) {
+                output.textContent = JSON.stringify(result.result, null, 2);
+            } else {
+                output.textContent = 'Erreur: ' + result.error;
+            }
+        }
+    } catch (error) {
+        output.textContent = 'Erreur: ' + error.message;
+    }
+}
+
+async function testCode() {
+    const code = document.getElementById('code-editor').value;
+    const testResults = document.getElementById('test-results');
+    const testList = document.getElementById('test-list');
+    const successMessage = document.getElementById('success-message');
+    
+    testResults.classList.remove('hidden');
+    testList.innerHTML = '<p class="text-sm text-gray-600">Tests en cours...</p>';
+    successMessage.classList.add('hidden');
+    
+    try {
+        let result;
+        if (exerciseType === 'PYTHON') {
+            result = await runPythonTests(code, testsDefinition.tests);
+        } else if (exerciseType === 'SQL') {
+            if (!window.dbInitialized) {
+                await initDatabase(testsDefinition.schema);
+                window.dbInitialized = true;
+            }
+            result = await runSQLTests(code, testsDefinition.tests);
+        }
+        
+        if (result.success) {
+            testList.innerHTML = '';
+            result.results.forEach(test => {
+                const testItem = document.createElement('div');
+                testItem.className = 'flex items-center justify-between p-2 border rounded ' + 
+                    (test.passed ? 'border-green-300 bg-green-50' : 'border-red-300 bg-red-50');
+                testItem.innerHTML = `
+                    <span class="text-sm ${test.passed ? 'text-green-800' : 'text-red-800'}">
+                        ${test.passed ? '<i class="fas fa-check"></i>' : '<i class="fas fa-times"></i>'}
+                        ${test.name}
+                    </span>
+                `;
+                testList.appendChild(testItem);
+            });
+            
+            const score = Math.round((result.results.filter(t => t.passed).length / result.results.length) * 100);
+            
+            if (result.allPassed) {
+                const submitResult = await submitExercise(exerciseId, exerciseType, code, true, score);
+                if (submitResult.success && submitResult.xp_awarded > 0) {
+                    document.getElementById('xp-gained').textContent = submitResult.xp_awarded;
+                    successMessage.classList.remove('hidden');
+                }
+            } else {
+                await submitExercise(exerciseId, exerciseType, code, false, score);
+            }
+        }
+    } catch (error) {
+        testList.innerHTML = `<p class="text-sm text-red-600">Erreur: ${error.message}</p>`;
+    }
+}
+
+async function useHint(hintId, xpCost) {
+    if (!confirm(`Utiliser cet indice vous coûtera ${xpCost} XP. Continuer ?`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/exercises/hint/${hintId}/use/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            document.getElementById(`hint-${hintId}`).textContent = data.content;
+            document.getElementById(`hint-${hintId}`).classList.remove('hidden');
+        }
+    } catch (error) {
+        alert('Erreur lors de la récupération de l\'indice');
+    }
+}
+
+function showHint(hintId) {
+    const hintDiv = document.getElementById(`hint-${hintId}`);
+    hintDiv.classList.toggle('hidden');
+}
+</script>
+{% endblock %}

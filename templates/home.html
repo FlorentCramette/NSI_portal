@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block title %}Accueil - Portail NSI{% endblock %}
+
+{% block content %}
+<div class="bg-white">
+    <div class="relative isolate px-6 pt-14 lg:px-8">
+        <div class="mx-auto max-w-2xl py-32 sm:py-48 lg:py-56">
+            <div class="text-center">
+                <h1 class="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
+                    Bienvenue sur le Portail NSI
+                </h1>
+                <p class="mt-6 text-lg leading-8 text-gray-600">
+                    Apprenez Python, l'algorithmique, les protocoles réseau et le SQL de manière interactive et ludique !
+                </p>
+                <div class="mt-10 flex items-center justify-center gap-x-6">
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'dashboard' %}" class="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                            Accéder au tableau de bord
+                        </a>
+                        <a href="{% url 'courses:course_list' %}" class="text-sm font-semibold leading-6 text-gray-900">
+                            Voir les cours <span aria-hidden="true">→</span>
+                        </a>
+                    {% else %}
+                        <a href="{% url 'accounts:student_register' %}" class="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                            S'inscrire (Élève)
+                        </a>
+                        <a href="{% url 'accounts:teacher_register' %}" class="rounded-md bg-green-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-green-500">
+                            S'inscrire (Professeur)
+                        </a>
+                        <a href="{% url 'accounts:login' %}" class="text-sm font-semibold leading-6 text-gray-900">
+                            Se connecter <span aria-hidden="true">→</span>
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features -->
+    <div class="py-24 sm:py-32">
+        <div class="mx-auto max-w-7xl px-6 lg:px-8">
+            <div class="mx-auto max-w-2xl lg:text-center">
+                <h2 class="text-base font-semibold leading-7 text-indigo-600">Apprentissage interactif</h2>
+                <p class="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+                    Tout ce dont vous avez besoin pour réussir en NSI
+                </p>
+            </div>
+            <div class="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-4xl">
+                <dl class="grid max-w-xl grid-cols-1 gap-x-8 gap-y-10 lg:max-w-none lg:grid-cols-2 lg:gap-y-16">
+                    <div class="relative pl-16">
+                        <dt class="text-base font-semibold leading-7 text-gray-900">
+                            <div class="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-600">
+                                <i class="fas fa-code text-white"></i>
+                            </div>
+                            Exercices Python
+                        </dt>
+                        <dd class="mt-2 text-base leading-7 text-gray-600">
+                            Exécutez du code Python directement dans votre navigateur avec Pyodide
+                        </dd>
+                    </div>
+                    <div class="relative pl-16">
+                        <dt class="text-base font-semibold leading-7 text-gray-900">
+                            <div class="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-600">
+                                <i class="fas fa-database text-white"></i>
+                            </div>
+                            Requêtes SQL
+                        </dt>
+                        <dd class="mt-2 text-base leading-7 text-gray-600">
+                            Pratiquez SQL avec une base de données SQLite en mémoire
+                        </dd>
+                    </div>
+                    <div class="relative pl-16">
+                        <dt class="text-base font-semibold leading-7 text-gray-900">
+                            <div class="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-600">
+                                <i class="fas fa-trophy text-white"></i>
+                            </div>
+                            Badges et XP
+                        </dt>
+                        <dd class="mt-2 text-base leading-7 text-gray-600">
+                            Gagnez des points d'expérience et débloquez des badges
+                        </dd>
+                    </div>
+                    <div class="relative pl-16">
+                        <dt class="text-base font-semibold leading-7 text-gray-900">
+                            <div class="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-600">
+                                <i class="fas fa-users text-white"></i>
+                            </div>
+                            Suivi de progression
+                        </dt>
+                        <dd class="mt-2 text-base leading-7 text-gray-600">
+                            Les professeurs peuvent suivre la progression de leurs élèves
+                        </dd>
+                    </div>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
