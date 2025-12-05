@@ -13,9 +13,12 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-CHANGE-THIS-IN-PRODUC
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
-if 'RAILWAY_STATIC_URL' in os.environ:
-    ALLOWED_HOSTS.append('.railway.app')
+ALLOWED_HOSTS = []
+railway_url = os.environ.get('RAILWAY_STATIC_URL', '')
+if railway_url:
+    ALLOWED_HOSTS.append(railway_url.replace('https://', '').replace('http://', ''))
+ALLOWED_HOSTS.extend(os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,.railway.app').split(','))
+ALLOWED_HOSTS = [h.strip() for h in ALLOWED_HOSTS if h.strip()]
 
 # Application definition
 INSTALLED_APPS = [
