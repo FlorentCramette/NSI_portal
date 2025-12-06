@@ -6,6 +6,7 @@ class Course(models.Model):
     """A course (Première or Terminale)"""
     
     class Level(models.TextChoices):
+        SECONDE = 'SECONDE', 'Seconde'
         PREMIERE = 'PREMIERE', 'Première'
         TERMINALE = 'TERMINALE', 'Terminale'
     
@@ -140,3 +141,4 @@ class ChapterAssignment(models.Model):
     
     def __str__(self):
         return f"{self.chapter} → {self.classroom.name}"
+
