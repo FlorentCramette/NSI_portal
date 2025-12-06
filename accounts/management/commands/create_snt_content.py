@@ -33,6 +33,10 @@ class Command(BaseCommand):
         self.stdout.write('\n💻 NSI - Première')
         self.create_nsi_premiere_courses()
 
+        # NSI Terminale
+        self.stdout.write('\n🎓 NSI - Terminale')
+        self.create_nsi_terminale_courses()
+
         self.stdout.write(self.style.SUCCESS('\n✅ Contenu créé avec succès!'))
 
     def create_snt_courses(self):
@@ -307,3 +311,142 @@ class Command(BaseCommand):
             }
         )
         self.stdout.write('  ✓ Cours NSI 1ère Web créé')
+        self.stdout.write('  ✓ Cours NSI 1ère Web créé')
+
+    def create_nsi_terminale_courses(self):
+        """Create NSI Terminale courses based on official French curriculum"""
+
+        # 1. Structures de données avancées
+        Course.objects.get_or_create(
+            slug='nsi-t-structures-donnees',
+            defaults={
+                'title': 'NSI Tale - Structures de Données',
+                'level': 'TERMINALE',
+                'description': 'Piles, files, listes, arbres, graphes, dictionnaires',
+                'icon': '🌳',
+                'image_url': 'images/courses/donnees.jpg',
+                'order': 1,
+                'is_published': True,
+            }
+        )
+        self.stdout.write('  ✓ Cours NSI Tale Structures de données créé')
+
+        # 2. Programmation Orientée Objet (POO)
+        Course.objects.get_or_create(
+            slug='nsi-t-poo',
+            defaults={
+                'title': 'NSI Tale - Programmation Orientée Objet',
+                'level': 'TERMINALE',
+                'description': 'Classes, objets, encapsulation, héritage, polymorphisme',
+                'icon': '🎯',
+                'image_url': 'images/courses/programmation.jpg',
+                'order': 2,
+                'is_published': True,
+            }
+        )
+        self.stdout.write('  ✓ Cours NSI Tale POO créé')
+
+        # 3. Récursivité
+        Course.objects.get_or_create(
+            slug='nsi-t-recursivite',
+            defaults={
+                'title': 'NSI Tale - Récursivité',
+                'level': 'TERMINALE',
+                'description': 'Fonctions récursives, diviser pour régner, backtracking',
+                'icon': '🔄',
+                'image_url': 'images/courses/algorithmique.jpg',
+                'order': 3,
+                'is_published': True,
+            }
+        )
+        self.stdout.write('  ✓ Cours NSI Tale Récursivité créé')
+
+        # 4. Algorithmique avancée
+        Course.objects.get_or_create(
+            slug='nsi-t-algorithmique-avancee',
+            defaults={
+                'title': 'NSI Tale - Algorithmique Avancée',
+                'level': 'TERMINALE',
+                'description': 'Programmation dynamique, algorithmes gloutons, recherche de motifs',
+                'icon': '🧮',
+                'image_url': 'images/courses/algorithmique.jpg',
+                'order': 4,
+                'is_published': True,
+            }
+        )
+        self.stdout.write('  ✓ Cours NSI Tale Algorithmique avancée créé')
+
+        # 5. Bases de données (SQL)
+        Course.objects.get_or_create(
+            slug='nsi-t-bases-donnees',
+            defaults={
+                'title': 'NSI Tale - Bases de Données',
+                'level': 'TERMINALE',
+                'description': 'SQL, modèle relationnel, requêtes, jointures, normalisation',
+                'icon': '🗄️',
+                'image_url': 'images/courses/traitement-donnees.jpg',
+                'order': 5,
+                'is_published': True,
+            }
+        )
+        self.stdout.write('  ✓ Cours NSI Tale Bases de données créé')
+
+        # 6. Architectures matérielles et systèmes
+        Course.objects.get_or_create(
+            slug='nsi-t-systemes',
+            defaults={
+                'title': 'NSI Tale - Systèmes et Processus',
+                'level': 'TERMINALE',
+                'description': 'Gestion des processus, ordonnancement, mémoire, systèmes d\'exploitation',
+                'icon': '⚙️',
+                'image_url': 'images/courses/architecture.jpg',
+                'order': 6,
+                'is_published': True,
+            }
+        )
+        self.stdout.write('  ✓ Cours NSI Tale Systèmes créé')
+
+        # 7. Calculabilité et décidabilité
+        Course.objects.get_or_create(
+            slug='nsi-t-calculabilite',
+            defaults={
+                'title': 'NSI Tale - Calculabilité',
+                'level': 'TERMINALE',
+                'description': 'Machines de Turing, problèmes indécidables, complexité',
+                'icon': '��',
+                'image_url': 'images/courses/algorithmique.jpg',
+                'order': 7,
+                'is_published': True,
+            }
+        )
+        self.stdout.write('  ✓ Cours NSI Tale Calculabilité créé')
+
+        # 8. Sécurité et cryptographie
+        Course.objects.get_or_create(
+            slug='nsi-t-securite',
+            defaults={
+                'title': 'NSI Tale - Sécurité et Cryptographie',
+                'level': 'TERMINALE',
+                'description': 'Chiffrement, signatures, protocoles sécurisés, HTTPS',
+                'icon': '🔐',
+                'image_url': 'images/courses/reseaux.jpg',
+                'order': 8,
+                'is_published': True,
+            }
+        )
+        self.stdout.write('  ✓ Cours NSI Tale Sécurité créé')
+
+        # 9. Protocoles de routage
+        Course.objects.get_or_create(
+            slug='nsi-t-routage',
+            defaults={
+                'title': 'NSI Tale - Protocoles de Routage',
+                'level': 'TERMINALE',
+                'description': 'RIP, OSPF, algorithmes de routage, tables de routage',
+                'icon': '🛣️',
+                'image_url': 'images/courses/reseaux.jpg',
+                'order': 9,
+                'is_published': True,
+            }
+        )
+        self.stdout.write('  ✓ Cours NSI Tale Routage créé')
