@@ -9,8 +9,21 @@ from courses.models import Course
 class Command(BaseCommand):
     help = 'Create SNT and NSI content conforming to French national curriculum'
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--clean',
+            action='store_true',
+            help='Delete all existing courses before creating new ones',
+        )
+
     def handle(self, *args, **kwargs):
         self.stdout.write(self.style.SUCCESS('🎓 Création du contenu SNT et NSI...'))
+
+        # Clean old courses if requested
+        if kwargs.get('clean'):
+            self.stdout.write(self.style.WARNING('\n🗑️ Suppression des anciens cours...'))
+            Course.objects.all().delete()
+            self.stdout.write(self.style.SUCCESS('✅ Anciens cours supprimés'))
 
         # SNT (Seconde) - 7 thématiques officielles
         self.stdout.write('\n📚 SNT - Sciences Numériques et Technologie (Seconde)')

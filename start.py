@@ -67,7 +67,7 @@ else:
     # Create initial course content
     print("\nCreating course content...")
     result = subprocess.run(
-        ["python", "manage.py", "create_snt_content"],
+        ["python", "manage.py", "create_snt_content", "--clean"],
         capture_output=True,
         text=True
     )
