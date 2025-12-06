@@ -1,0 +1,104 @@
+<!-- Interactive Python Code Block -->
+<div class="interactive-code-block my-6 border border-gray-300 rounded-lg overflow-hidden">
+    <div class="bg-gray-800 text-white px-4 py-2 flex justify-between items-center">
+        <span class="font-semibold">💻 Éditeur Python Interactif</span>
+        <button onclick="runCode(this)" class="bg-green-600 hover:bg-green-700 px-4 py-1 rounded text-sm transition">
+            ▶ Exécuter
+        </button>
+    </div>
+    
+    <div class="relative">
+        <textarea class="code-editor font-mono text-sm w-full p-4 bg-gray-50 border-0" rows="10" spellcheck="false">{{ code }}</textarea>
+    </div>
+    
+    <div class="output-container hidden">
+        <div class="bg-gray-100 px-4 py-2 border-t border-gray-300">
+            <span class="font-semibold text-gray-700">📤 Sortie:</span>
+        </div>
+        <pre class="code-output p-4 bg-white text-sm font-mono whitespace-pre-wrap"></pre>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt-stdlib.js"></script>
+
+<script>
+function runCode(button) {
+    const block = button.closest('.interactive-code-block');
+    const editor = block.querySelector('.code-editor');
+    const outputContainer = block.querySelector('.output-container');
+    const output = block.querySelector('.code-output');
+    
+    // Show output container
+    outputContainer.classList.remove('hidden');
+    output.textContent = '';
+    
+    // Configure Skulpt
+    Sk.configure({
+        output: function(text) {
+            output.textContent += text;
+        },
+        read: function(x) {
+            if (Sk.builtinFiles === undefined || Sk.builtinFiles["files"][x] === undefined)
+                throw "File not found: '" + x + "'";
+            return Sk.builtinFiles["files"][x];
+        }
+    });
+    
+    // Run Python code
+    const code = editor.value;
+    button.textContent = '⏳ Exécution...';
+    button.disabled = true;
+    
+    Sk.misceval.asyncToPromise(function() {
+        return Sk.importMainWithBody("<stdin>", false, code, true);
+    }).then(
+        function() {
+            button.textContent = '✅ Terminé';
+            button.classList.remove('bg-green-600', 'hover:bg-green-700');
+            button.classList.add('bg-blue-600');
+            setTimeout(() => {
+                button.textContent = '▶ Exécuter';
+                button.disabled = false;
+                button.classList.remove('bg-blue-600');
+                button.classList.add('bg-green-600', 'hover:bg-green-700');
+            }, 2000);
+        },
+        function(err) {
+            output.textContent = '❌ Erreur:\n' + err.toString();
+            output.classList.add('text-red-600');
+            button.textContent = '▶ Exécuter';
+            button.disabled = false;
+            setTimeout(() => {
+                output.classList.remove('text-red-600');
+            }, 3000);
+        }
+    );
+}
+
+// Add syntax highlighting to textareas
+document.querySelectorAll('.code-editor').forEach(editor => {
+    editor.addEventListener('keydown', function(e) {
+        if (e.key === 'Tab') {
+            e.preventDefault();
+            const start = this.selectionStart;
+            const end = this.selectionEnd;
+            this.value = this.value.substring(0, start) + '    ' + this.value.substring(end);
+            this.selectionStart = this.selectionEnd = start + 4;
+        }
+    });
+});
+</script>
+
+<style>
+.code-editor {
+    resize: vertical;
+    min-height: 150px;
+    max-height: 600px;
+}
+
+.code-editor:focus {
+    outline: none;
+    background-color: #fefefe;
+}
+</style>

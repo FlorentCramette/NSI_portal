@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{{ chapter.title }} - NSI Portal{% endblock %}
+{% block title %}{{ chapter.title }} - {{ chapter.course.title }}{% endblock %}
 
 {% block content %}
 <div class="max-w-4xl mx-auto px-4 py-8">
@@ -8,140 +8,275 @@
     <nav class="mb-6 text-sm">
         <ol class="flex items-center space-x-2 text-gray-600">
             <li><a href="{% url 'courses:course_list' %}" class="hover:text-blue-600">Cours</a></li>
-            <li>/</li>
+            <li>›</li>
             <li><a href="{% url 'courses:course_detail' chapter.course.slug %}" class="hover:text-blue-600">{{ chapter.course.title }}</a></li>
-            <li>/</li>
+            <li>›</li>
             <li class="text-gray-900 font-semibold">{{ chapter.title }}</li>
         </ol>
     </nav>
 
-    <!-- Chapter header -->
-    <div class="bg-white rounded-lg shadow-md p-8 mb-8">
+    <!-- Chapter Header -->
+    <div class="mb-8">
         <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ chapter.title }}</h1>
+        {% if chapter.description %}
         <p class="text-gray-600 text-lg">{{ chapter.description }}</p>
-    </div>
-
-    <!-- Content blocks -->
-    {% for block in content_blocks %}
-    <div class="bg-white rounded-lg shadow-md p-8 mb-6">
-        {% if block.title %}
-        <h2 class="text-2xl font-bold text-gray-900 mb-4">{{ block.title }}</h2>
-        {% endif %}
-
-        {% if block.type == 'TEXT' %}
-            <div class="prose max-w-none">
-                {{ block.content_html|safe }}
-            </div>
-
-        {% elif block.type == 'CODE_SAMPLE' %}
-            <div class="bg-gray-900 text-gray-100 rounded-lg p-4 overflow-x-auto">
-                <pre><code>{{ block.content_markdown }}</code></pre>
-            </div>
-
-        {% elif block.type == 'EXERCISE' %}
-            <div class="bg-blue-50 border-l-4 border-blue-600 p-6 rounded">
-                <div class="flex items-center gap-2 mb-3">
-                    <span class="text-2xl">💪</span>
-                    <h3 class="text-xl font-bold text-gray-900">Exercice</h3>
-                </div>
-                <p class="text-gray-700 mb-4">{{ block.content_markdown }}</p>
-                <a href="#" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition inline-block">
-                    Commencer l'exercice
-                </a>
-            </div>
-
-        {% elif block.type == 'QUIZ' %}
-            <div class="bg-purple-50 border-l-4 border-purple-600 p-6 rounded">
-                <div class="flex items-center gap-2 mb-3">
-                    <span class="text-2xl">❓</span>
-                    <h3 class="text-xl font-bold text-gray-900">Quiz</h3>
-                </div>
-                <div class="prose max-w-none">
-                    {{ block.content_html|safe }}
-                </div>
-            </div>
-
-        {% elif block.type == 'VIDEO' %}
-            <div class="aspect-video bg-gray-900 rounded-lg flex items-center justify-center">
-                <span class="text-white text-lg">▶️ Vidéo</span>
-                <!-- Video player integration here -->
-            </div>
         {% endif %}
     </div>
-    {% endfor %}
 
-    <!-- Chapter exercises -->
-    {% if exercises %}
-    <div class="bg-white rounded-lg shadow-md p-8 mb-8">
-        <h2 class="text-2xl font-bold text-gray-900 mb-6">Exercices du chapitre</h2>
-        
-        <div class="space-y-4">
-            {% for exercise in exercises %}
-            <div class="border border-gray-200 rounded-lg p-4 hover:border-blue-500 transition">
-                <div class="flex items-center justify-between">
-                    <div class="flex-1">
-                        <div class="flex items-center gap-3">
-                            <span class="text-2xl">
-                                {% if exercise.type == 'PYTHON' %}🐍
-                                {% elif exercise.type == 'SQL' %}🗄️
-                                {% elif exercise.type == 'MCQ' %}❓
-                                {% elif exercise.type == 'PARSONS' %}🧩
-                                {% endif %}
+    <!-- Content Blocks -->
+    <div class="space-y-8">
+        {% for block in chapter.content_blocks.all %}
+            {% if block.type == 'TEXT' %}
+                <!-- Text Block -->
+                <div class="prose prose-lg max-w-none bg-white rounded-lg shadow-sm p-6">
+                    {% if block.title %}
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4">{{ block.title }}</h2>
+                    {% endif %}
+                    {{ block.content_markdown|safe }}
+                </div>
+
+            {% elif block.type == 'CODE_SAMPLE' %}
+                <!-- Interactive Code Block -->
+                <div class="my-8">
+                    {% if block.title %}
+                    <h3 class="text-xl font-bold text-gray-900 mb-4">{{ block.title }}</h3>
+                    {% endif %}
+                    
+                    <div class="interactive-code-block border border-gray-300 rounded-lg overflow-hidden shadow-lg">
+                        <div class="bg-gradient-to-r from-gray-800 to-gray-900 text-white px-4 py-3 flex justify-between items-center">
+                            <span class="font-semibold flex items-center">
+                                <span class="text-2xl mr-2">🐍</span>
+                                Éditeur Python Interactif
                             </span>
-                            <div>
-                                <h3 class="font-bold text-gray-900">{{ exercise.title }}</h3>
-                                <div class="flex items-center gap-3 text-sm text-gray-500 mt-1">
-                                    <span>⭐ {{ exercise.xp_reward }} XP</span>
-                                    <span class="px-2 py-0.5 bg-gray-100 rounded">{{ exercise.get_type_display }}</span>
-                                </div>
+                            <button onclick="runCode{{ block.id }}()" class="bg-green-600 hover:bg-green-700 px-6 py-2 rounded-lg text-sm transition transform hover:scale-105 font-semibold shadow-md">
+                                ▶ Exécuter
+                            </button>
+                        </div>
+                        
+                        <div class="relative bg-gray-50">
+                            <textarea id="editor{{ block.id }}" class="code-editor font-mono text-sm w-full p-4 border-0 focus:ring-2 focus:ring-blue-500" rows="12" spellcheck="false">{{ block.content_markdown }}</textarea>
+                        </div>
+                        
+                        <div id="output-container{{ block.id }}" class="hidden">
+                            <div class="bg-gradient-to-r from-blue-50 to-blue-100 px-4 py-2 border-t border-gray-300">
+                                <span class="font-semibold text-blue-900 flex items-center">
+                                    <span class="mr-2">📤</span>
+                                    Résultat de l'exécution
+                                </span>
                             </div>
+                            <pre id="output{{ block.id }}" class="code-output p-4 bg-white text-sm font-mono whitespace-pre-wrap border-t border-gray-200"></pre>
                         </div>
                     </div>
-                    
-                    <div>
-                        {% if user.is_authenticated %}
-                            {% with user_attempts=exercise.attempts.filter|filter:"user=user" %}
-                            {% if user_attempts.exists %}
-                                {% with last_attempt=user_attempts.first %}
-                                {% if last_attempt.passed %}
-                                    <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold mr-2">
-                                        ✓ Réussi
-                                    </span>
-                                {% endif %}
-                                {% endwith %}
-                            {% endif %}
-                            {% endwith %}
-                        {% endif %}
+
+                    <script>
+                    function runCode{{ block.id }}() {
+                        const editor = document.getElementById('editor{{ block.id }}');
+                        const outputContainer = document.getElementById('output-container{{ block.id }}');
+                        const output = document.getElementById('output{{ block.id }}');
+                        const button = event.target;
                         
-                        <a href="{% url 'exercises:exercise_detail' exercise.id %}"
-                           class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition inline-block">
-                            Faire l'exercice
-                        </a>
+                        outputContainer.classList.remove('hidden');
+                        output.textContent = '';
+                        output.classList.remove('text-red-600');
+                        
+                        Sk.configure({
+                            output: function(text) {
+                                output.textContent += text;
+                            },
+                            read: function(x) {
+                                if (Sk.builtinFiles === undefined || Sk.builtinFiles["files"][x] === undefined)
+                                    throw "File not found: '" + x + "'";
+                                return Sk.builtinFiles["files"][x];
+                            }
+                        });
+                        
+                        const code = editor.value;
+                        button.textContent = '⏳ Exécution...';
+                        button.disabled = true;
+                        
+                        Sk.misceval.asyncToPromise(function() {
+                            return Sk.importMainWithBody("<stdin>", false, code, true);
+                        }).then(
+                            function() {
+                                button.textContent = '✅ Terminé';
+                                button.classList.remove('bg-green-600', 'hover:bg-green-700');
+                                button.classList.add('bg-blue-600');
+                                setTimeout(() => {
+                                    button.textContent = '▶ Exécuter';
+                                    button.disabled = false;
+                                    button.classList.remove('bg-blue-600');
+                                    button.classList.add('bg-green-600', 'hover:bg-green-700');
+                                }, 2000);
+                            },
+                            function(err) {
+                                output.textContent = '❌ Erreur Python:\n' + err.toString();
+                                output.classList.add('text-red-600');
+                                button.textContent = '▶ Exécuter';
+                                button.disabled = false;
+                            }
+                        );
+                    }
+                    
+                    // Tab support
+                    document.getElementById('editor{{ block.id }}').addEventListener('keydown', function(e) {
+                        if (e.key === 'Tab') {
+                            e.preventDefault();
+                            const start = this.selectionStart;
+                            const end = this.selectionEnd;
+                            this.value = this.value.substring(0, start) + '    ' + this.value.substring(end);
+                            this.selectionStart = this.selectionEnd = start + 4;
+                        }
+                    });
+                    </script>
+                </div>
+
+            {% elif block.type == 'QUIZ' %}
+                <!-- Quiz Block -->
+                <div class="bg-yellow-50 border-l-4 border-yellow-400 rounded-lg p-6 my-8 shadow-sm">
+                    {% if block.title %}
+                    <h3 class="text-xl font-bold text-yellow-900 mb-4 flex items-center">
+                        <span class="text-2xl mr-2">🎯</span>
+                        {{ block.title }}
+                    </h3>
+                    {% endif %}
+                    <div class="prose">
+                        {{ block.content_markdown|safe }}
                     </div>
                 </div>
+
+            {% elif block.type == 'EXERCISE' %}
+                <!-- Exercise Block -->
+                <div class="bg-green-50 border-l-4 border-green-400 rounded-lg p-6 my-8 shadow-sm">
+                    {% if block.title %}
+                    <h3 class="text-xl font-bold text-green-900 mb-4 flex items-center">
+                        <span class="text-2xl mr-2">✏️</span>
+                        {{ block.title }}
+                    </h3>
+                    {% endif %}
+                    <div class="prose">
+                        {{ block.content_markdown|safe }}
+                    </div>
+                </div>
+
+            {% elif block.type == 'VIDEO' %}
+                <!-- Video Block -->
+                <div class="my-8 bg-white rounded-lg shadow-sm overflow-hidden">
+                    {% if block.title %}
+                    <div class="bg-gray-100 px-6 py-3 border-b">
+                        <h3 class="text-xl font-bold text-gray-900 flex items-center">
+                            <span class="text-2xl mr-2">🎥</span>
+                            {{ block.title }}
+                        </h3>
+                    </div>
+                    {% endif %}
+                    <div class="aspect-w-16 aspect-h-9 bg-gray-900">
+                        {{ block.content_markdown|safe }}
+                    </div>
+                </div>
+
+            {% endif %}
+        {% empty %}
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
+                <p class="text-yellow-800">Ce chapitre n'a pas encore de contenu. Revenez plus tard! 📚</p>
             </div>
-            {% endfor %}
-        </div>
+        {% endfor %}
     </div>
-    {% endif %}
 
     <!-- Navigation -->
-    <div class="flex justify-between">
-        {% if previous_chapter %}
-        <a href="{% url 'courses:chapter_detail' chapter.course.slug previous_chapter.slug %}"
-           class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
-            ← {{ previous_chapter.title }}
+    <div class="mt-12 pt-6 border-t border-gray-200 flex justify-between items-center">
+        <a href="{% url 'courses:course_detail' chapter.course.slug %}" class="text-blue-600 hover:text-blue-800 flex items-center font-semibold">
+            ← Retour au cours
         </a>
-        {% else %}
-        <div></div>
-        {% endif %}
         
+        {% comment %}
         {% if next_chapter %}
-        <a href="{% url 'courses:chapter_detail' chapter.course.slug next_chapter.slug %}"
-           class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-            {{ next_chapter.title }} →
+        <a href="{% url 'courses:chapter_detail' chapter.course.slug next_chapter.slug %}" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition font-semibold">
+            Chapitre suivant →
         </a>
         {% endif %}
+        {% endcomment %}
     </div>
 </div>
+
+<!-- Load Skulpt for Python execution -->
+<script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt-stdlib.js"></script>
+
+<style>
+.code-editor {
+    resize: vertical;
+    min-height: 200px;
+    max-height: 600px;
+    background-color: #f8f9fa;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+}
+
+.code-editor:focus {
+    outline: none;
+    background-color: #ffffff;
+}
+
+.prose {
+    line-height: 1.75;
+    color: #374151;
+}
+
+.prose h2 {
+    margin-top: 2em;
+    margin-bottom: 1em;
+    color: #111827;
+}
+
+.prose h3 {
+    margin-top: 1.5em;
+    margin-bottom: 0.75em;
+    color: #1f2937;
+}
+
+.prose p {
+    margin-bottom: 1.25em;
+}
+
+.prose ul, .prose ol {
+    margin-bottom: 1.25em;
+    padding-left: 1.5em;
+}
+
+.prose li {
+    margin-bottom: 0.5em;
+}
+
+.prose code {
+    background-color: #f3f4f6;
+    padding: 0.2em 0.4em;
+    border-radius: 0.25rem;
+    font-size: 0.875em;
+    color: #dc2626;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+}
+
+.prose pre {
+    background-color: #1f2937;
+    color: #f3f4f6;
+    padding: 1em;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    margin: 1.5em 0;
+}
+
+.prose pre code {
+    background-color: transparent;
+    color: inherit;
+    padding: 0;
+}
+
+.prose strong {
+    color: #111827;
+    font-weight: 600;
+}
+
+.prose em {
+    color: #4b5563;
+}
+</style>
 {% endblock %}
