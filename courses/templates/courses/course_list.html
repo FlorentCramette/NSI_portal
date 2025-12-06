@@ -29,8 +29,15 @@
     <div id="courses-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {% for course in courses %}
         <div class="course-card bg-white rounded-lg shadow-md hover:shadow-lg transition overflow-hidden" data-level="{{ course.get_level_display }}">
-            <div class="h-48 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                <span class="text-6xl">{{ course.icon }}</span>
+            <div class="h-48 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center relative overflow-hidden">
+                {% if course.image_url %}
+                    {% load static %}
+                    <img src="{% static course.image_url %}" alt="{{ course.title }}" class="absolute inset-0 w-full h-full object-cover">
+                    <div class="absolute inset-0 bg-black bg-opacity-30"></div>
+                    <span class="text-6xl relative z-10 drop-shadow-lg">{{ course.icon }}</span>
+                {% else %}
+                    <span class="text-6xl">{{ course.icon }}</span>
+                {% endif %}
             </div>
 
             <div class="p-6">

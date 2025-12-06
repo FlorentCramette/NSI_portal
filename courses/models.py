@@ -18,6 +18,8 @@ class Course(models.Model):
         verbose_name='Niveau'
     )
     description = models.TextField(verbose_name='Description')
+    icon = models.CharField(max_length=10, default='📚', verbose_name='Icône')
+    image_url = models.CharField(max_length=200, blank=True, null=True, verbose_name="URL de l'image")
     order = models.IntegerField(default=0, verbose_name='Ordre')
     is_published = models.BooleanField(default=False, verbose_name='Publié')
     created_at = models.DateTimeField(auto_now_add=True)
