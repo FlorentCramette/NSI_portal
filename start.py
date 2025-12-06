@@ -76,6 +76,18 @@ else:
     if result.returncode != 0 and result.stderr:
         print(f"⚠️ Course creation warning: {result.stderr}")
 
+    # Populate interactive content for Python course
+    print("\nPopulating interactive Python content...")
+    result = subprocess.run(
+        ["python", "manage.py", "populate_python_content"],
+        capture_output=True,
+        text=True
+    )
+    if result.stdout:
+        print(result.stdout)
+    if result.returncode != 0 and result.stderr:
+        print(f"⚠️ Content population warning: {result.stderr}")
+
     # Collect static files
     print("\nCollecting static files...")
     run_command("python manage.py collectstatic --noinput --clear")
