@@ -50,11 +50,15 @@ class CourseDetailView(LoginRequiredMixin, DetailView):
         user = self.request.user
         course = self.object
 
+        # Get chapters ordered by order field
+        chapters = course.chapters.all().order_by('order')
+        
         # Add completion stats for each chapter
         if user.is_student:
-            for chapter in course.chapters.all():
+            for chapter in chapters:
                 chapter.completion = chapter.get_completion_for_user(user)
-
+        
+        context['chapters'] = chapters
         return context
 
 
