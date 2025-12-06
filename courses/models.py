@@ -3,13 +3,13 @@ from django.utils.text import slugify
 
 
 class Course(models.Model):
-    """A course (Première or Terminale)"""
-    
+    """A course (SNT for Seconde, NSI for Première/Terminale)"""
+
     class Level(models.TextChoices):
-        SECONDE = 'SECONDE', 'Seconde'
-        PREMIERE = 'PREMIERE', 'Première'
-        TERMINALE = 'TERMINALE', 'Terminale'
-    
+        SNT = 'SNT', 'SNT (Seconde)'
+        PREMIERE = 'PREMIERE', 'NSI Première'
+        TERMINALE = 'TERMINALE', 'NSI Terminale'
+
     title = models.CharField(max_length=200, verbose_name='Titre')
     slug = models.SlugField(max_length=200, unique=True, blank=True, verbose_name='Slug')
     level = models.CharField(
