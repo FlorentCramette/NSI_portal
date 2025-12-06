@@ -17,7 +17,7 @@ def run_command(cmd):
 if __name__ == "__main__":
     # Run migrations
     run_command("python manage.py migrate --noinput")
-    
+
     # Create superuser if it doesn't exist
     if os.environ.get('DJANGO_SUPERUSER_USERNAME'):
         print("\nCreating/updating superuser...")
@@ -63,15 +63,27 @@ else:
             print(result.stdout)
         if result.returncode != 0 and result.stderr:
             print(f"⚠️ Superuser creation warning: {result.stderr}")
-    
+
+    # Create initial course content
+    print("\nCreating course content...")
+    result = subprocess.run(
+        ["python", "manage.py", "create_snt_content"],
+        capture_output=True,
+        text=True
+    )
+    if result.stdout:
+        print(result.stdout)
+    if result.returncode != 0 and result.stderr:
+        print(f"⚠️ Course creation warning: {result.stderr}")
+
     # Collect static files
     print("\nCollecting static files...")
     run_command("python manage.py collectstatic --noinput --clear")
-    
+
     # Start Gunicorn
     port = os.environ.get('PORT', '8000')
     workers = os.environ.get('WEB_CONCURRENCY', '3')
-    
+
     print(f"\nStarting Gunicorn on port {port} with {workers} workers...")
     gunicorn_cmd = [
         "gunicorn",
