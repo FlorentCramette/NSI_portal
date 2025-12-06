@@ -15,10 +15,13 @@
             Tous
         </button>
         <button class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
-            Première
+            SNT (Seconde)
         </button>
         <button class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
-            Terminale
+            NSI Première
+        </button>
+        <button class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
+            NSI Terminale
         </button>
     </div>
 
@@ -29,7 +32,7 @@
             <div class="h-48 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
                 <span class="text-6xl">{{ course.icon }}</span>
             </div>
-            
+
             <div class="p-6">
                 <div class="flex items-center justify-between mb-2">
                     <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded">
@@ -39,10 +42,10 @@
                         {{ course.chapters.count }} chapitre{{ course.chapters.count|pluralize }}
                     </span>
                 </div>
-                
+
                 <h3 class="text-xl font-bold text-gray-900 mb-2">{{ course.title }}</h3>
                 <p class="text-gray-600 text-sm mb-4">{{ course.description|truncatewords:20 }}</p>
-                
+
                 {% if user.is_authenticated and user.role == 'STUDENT' %}
                     {% with completion=course.get_completion_for_user|default:0 %}
                     <div class="mb-4">
@@ -56,8 +59,8 @@
                     </div>
                     {% endwith %}
                 {% endif %}
-                
-                <a href="{% url 'courses:course_detail' course.slug %}" 
+
+                <a href="{% url 'courses:course_detail' course.slug %}"
                    class="block w-full text-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
                     {% if user.is_authenticated and user.role == 'STUDENT' %}
                         Continuer
