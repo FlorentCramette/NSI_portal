@@ -138,3 +138,152 @@ class HintUsage(models.Model):
     
     def __str__(self):
         return f"{self.user} - {self.hint}"
+
+
+class Assessment(models.Model):
+    '''Évaluation/Test pour mesurer les compétences des élèves'''
+    
+    class AssessmentType(models.TextChoices):
+        DIAGNOSTIC = 'DIAGNOSTIC', 'Test de positionnement'
+        CHECKPOINT = 'CHECKPOINT', 'Checkpoint'
+        FINAL = 'FINAL', 'Évaluation finale'
+    
+    title = models.CharField(max_length=200, verbose_name='Titre')
+    type = models.CharField(
+        max_length=20,
+        choices=AssessmentType.choices,
+        verbose_name='Type'
+    )
+    course = models.ForeignKey(
+        'courses.Course',
+        on_delete=models.CASCADE,
+        related_name='assessments',
+        null=True,
+        blank=True,
+        verbose_name='Cours associé'
+    )
+    description = models.TextField(verbose_name='Description')
+    duration_minutes = models.IntegerField(
+        default=60,
+        verbose_name='Durée (minutes)'
+    )
+    passing_score = models.IntegerField(
+        default=50,
+        verbose_name='Score minimum (%)'
+    )
+    order = models.IntegerField(default=0, verbose_name='Ordre')
+    is_published = models.BooleanField(default=False, verbose_name='Publié')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = 'Évaluation'
+        verbose_name_plural = 'Évaluations'
+        ordering = ['course', 'order']
+    
+    def __str__(self):
+        course_name = self.course.title if self.course else 'Général'
+        return f'{self.get_type_display()} - {self.title} ({course_name})'
+
+
+class AssessmentQuestion(models.Model):
+    '''Question d'une évaluation'''
+    
+    assessment = models.ForeignKey(
+        Assessment,
+        on_delete=models.CASCADE,
+        related_name='questions'
+    )
+    exercise = models.ForeignKey(
+        'exercises.Exercise',
+        on_delete=models.CASCADE,
+        verbose_name='Exercice'
+    )
+    points = models.IntegerField(default=1, verbose_name='Points')
+    order = models.IntegerField(default=0, verbose_name='Ordre')
+    
+    class Meta:
+        verbose_name = 'Question d\'évaluation'
+        verbose_name_plural = 'Questions d\'évaluation'
+        ordering = ['assessment', 'order']
+        unique_together = ['assessment', 'exercise']
+    
+    def __str__(self):
+        return f'{self.assessment.title} - Q{self.order}: {self.exercise.title}'
+
+
+class AssessmentResult(models.Model):
+    '''Résultat d'un élève à une évaluation'''
+    
+    user = models.ForeignKey(
+        'accounts.User',
+        on_delete=models.CASCADE,
+        related_name='assessment_results'
+    )
+    assessment = models.ForeignKey(
+        Assessment,
+        on_delete=models.CASCADE,
+        related_name='results'
+    )
+    score = models.IntegerField(verbose_name='Score (%)')
+    points_earned = models.IntegerField(verbose_name='Points obtenus')
+    points_total = models.IntegerField(verbose_name='Points total')
+    time_spent_minutes = models.IntegerField(
+        null=True,
+        blank=True,
+        verbose_name='Temps passé (minutes)'
+    )
+    started_at = models.DateTimeField(verbose_name='Commencé le')
+    completed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='Terminé le'
+    )
+    
+    class Meta:
+        verbose_name = 'Résultat d\'évaluation'
+        verbose_name_plural = 'Résultats d\'évaluation'
+        ordering = ['-completed_at']
+        unique_together = ['user', 'assessment']
+    
+    def __str__(self):
+        return f'{self.user} - {self.assessment.title}: {self.score}%'
+    
+    @property
+    def has_passed(self):
+        return self.score >= self.assessment.passing_score
+
+
+class ClassroomAssessmentStats(models.Model):
+    '''Statistiques d'une classe pour une évaluation'''
+    
+    classroom = models.ForeignKey(
+        'accounts.Classroom',
+        on_delete=models.CASCADE,
+        related_name='assessment_stats'
+    )
+    assessment = models.ForeignKey(
+        Assessment,
+        on_delete=models.CASCADE,
+        related_name='classroom_stats'
+    )
+    average_score = models.FloatField(verbose_name='Moyenne de la classe')
+    median_score = models.FloatField(verbose_name='Médiane')
+    min_score = models.IntegerField(verbose_name='Score minimum')
+    max_score = models.IntegerField(verbose_name='Score maximum')
+    completion_rate = models.FloatField(
+        verbose_name='Taux de complétion (%)'
+    )
+    students_passed = models.IntegerField(
+        verbose_name='Élèves ayant réussi'
+    )
+    students_total = models.IntegerField(verbose_name='Total élèves')
+    last_updated = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = 'Statistiques classe'
+        verbose_name_plural = 'Statistiques des classes'
+        unique_together = ['classroom', 'assessment']
+    
+    def __str__(self):
+        return f'{self.classroom.name} - {self.assessment.title}: {self.average_score:.1f}%'
