@@ -17,10 +17,31 @@
 
     <!-- Chapter Header -->
     <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ chapter.title }}</h1>
-        {% if chapter.description %}
-        <p class="text-gray-600 text-lg">{{ chapter.description }}</p>
-        {% endif %}
+        <div class="flex justify-between items-start mb-4">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ chapter.title }}</h1>
+                {% if chapter.description %}
+                <p class="text-gray-600 text-lg">{{ chapter.description }}</p>
+                {% endif %}
+            </div>
+            
+            <!-- Export Buttons -->
+            <div class="flex gap-2 flex-shrink-0">
+                <a href="{% url 'courses:export_notebook' chapter.course.slug chapter.slug %}" 
+                   class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg transition flex items-center gap-2 shadow-md"
+                   title="Télécharger en Jupyter Notebook">
+                    <span class="text-xl">📓</span>
+                    <span class="font-semibold">Notebook</span>
+                </a>
+                <a href="{% url 'courses:export_pdf' chapter.course.slug chapter.slug %}" 
+                   target="_blank"
+                   class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition flex items-center gap-2 shadow-md"
+                   title="Ouvrir la version imprimable (PDF)">
+                    <span class="text-xl">🖨️</span>
+                    <span class="font-semibold">PDF</span>
+                </a>
+            </div>
+        </div>
     </div>
 
     <!-- Content Blocks -->

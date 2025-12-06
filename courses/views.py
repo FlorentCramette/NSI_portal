@@ -3,9 +3,13 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.views.generic import ListView, DetailView, View
 from django.db.models import Prefetch
+from django.http import HttpResponse
+from django.template.loader import render_to_string
 from .models import Course, Chapter, ContentBlock, ChapterAssignment
 import markdown
 import bleach
+import json
+from datetime import datetime
 
 
 class CourseListView(LoginRequiredMixin, ListView):
@@ -135,3 +139,156 @@ class AssignChapterView(LoginRequiredMixin, View):
             messages.info(request, 'Ce chapitre est déjà attribué à cette classe.')
         
         return redirect('courses:chapter_detail', slug=chapter.slug)
+
+
+class ExportChapterNotebookView(LoginRequiredMixin, View):
+    """Export chapter as Jupyter Notebook (.ipynb)"""
+    
+    def get(self, request, course_slug, chapter_slug):
+        chapter = get_object_or_404(Chapter, slug=chapter_slug, course__slug=course_slug)
+        course = chapter.course
+        
+        # Build Jupyter Notebook structure
+        notebook = {
+            "cells": [],
+            "metadata": {
+                "kernelspec": {
+                    "display_name": "Python 3",
+                    "language": "python",
+                    "name": "python3"
+                },
+                "language_info": {
+                    "name": "python",
+                    "version": "3.12.0"
+                }
+            },
+            "nbformat": 4,
+            "nbformat_minor": 5
+        }
+        
+        # Add title cell
+        notebook["cells"].append({
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": [
+                f"# {course.title}\n",
+                f"## {chapter.title}\n\n",
+                f"{chapter.description}\n\n",
+                f"---\n",
+                f"*Généré le {datetime.now().strftime('%d/%m/%Y à %H:%M')}*"
+            ]
+        })
+        
+        # Add content blocks
+        for block in chapter.content_blocks.all():
+            if block.type == 'TEXT':
+                # Text block as markdown
+                notebook["cells"].append({
+                    "cell_type": "markdown",
+                    "metadata": {},
+                    "source": self._clean_html_for_markdown(block.content_markdown, block.title)
+                })
+                
+            elif block.type == 'CODE_SAMPLE':
+                # Add title if exists
+                if block.title:
+                    notebook["cells"].append({
+                        "cell_type": "markdown",
+                        "metadata": {},
+                        "source": [f"### {block.title}\n"]
+                    })
+                
+                # Code block as executable Python
+                notebook["cells"].append({
+                    "cell_type": "code",
+                    "execution_count": None,
+                    "metadata": {},
+                    "outputs": [],
+                    "source": block.content_markdown.split('\n')
+                })
+                
+            elif block.type == 'QUIZ':
+                # Quiz as markdown with special formatting
+                notebook["cells"].append({
+                    "cell_type": "markdown",
+                    "metadata": {},
+                    "source": [
+                        f"### 🎯 {block.title or 'Quiz'}\n\n",
+                        *self._clean_html_for_markdown(block.content_markdown)
+                    ]
+                })
+                
+            elif block.type == 'EXERCISE':
+                # Exercise as markdown
+                notebook["cells"].append({
+                    "cell_type": "markdown",
+                    "metadata": {},
+                    "source": [
+                        f"### ✏️ {block.title or 'Exercice'}\n\n",
+                        *self._clean_html_for_markdown(block.content_markdown)
+                    ]
+                })
+                
+                # Add empty code cell for solution
+                notebook["cells"].append({
+                    "cell_type": "code",
+                    "execution_count": None,
+                    "metadata": {},
+                    "outputs": [],
+                    "source": ["# Écrivez votre solution ici\n"]
+                })
+        
+        # Create response
+        response = HttpResponse(
+            json.dumps(notebook, indent=2, ensure_ascii=False),
+            content_type='application/x-ipynb+json'
+        )
+        filename = f"{course.slug}_{chapter.slug}.ipynb"
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        
+        return response
+    
+    def _clean_html_for_markdown(self, html_content, title=None):
+        """Convert HTML to markdown-friendly format"""
+        import re
+        lines = []
+        if title:
+            lines.append(f"### {title}\n\n")
+        
+        # Basic HTML to markdown conversion
+        content = html_content.replace('<p>', '').replace('</p>', '\n\n')
+        content = content.replace('<strong>', '**').replace('</strong>', '**')
+        content = content.replace('<em>', '*').replace('</em>', '*')
+        content = content.replace('<code>', '`').replace('</code>', '`')
+        content = content.replace('<li>', '- ').replace('</li>', '\n')
+        content = content.replace('<ul>', '\n').replace('</ul>', '\n')
+        content = content.replace('</h2>', '\n').replace('</h3>', '\n')
+        content = content.replace('<h2>', '## ').replace('<h3>', '### ')
+        
+        # Remove remaining HTML tags
+        content = re.sub(r'<[^>]+>', '', content)
+        
+        lines.extend(content.split('\n'))
+        return lines
+
+
+class ExportChapterPDFView(LoginRequiredMixin, View):
+    """Export chapter as printable PDF"""
+    
+    def get(self, request, course_slug, chapter_slug):
+        chapter = get_object_or_404(Chapter, slug=chapter_slug, course__slug=course_slug)
+        course = chapter.course
+        
+        # Render HTML template for printing
+        context = {
+            'chapter': chapter,
+            'course': course,
+            'content_blocks': chapter.content_blocks.all(),
+            'generated_date': datetime.now().strftime('%d/%m/%Y à %H:%M')
+        }
+        
+        html = render_to_string('courses/chapter_print.html', context)
+        
+        # Return HTML that can be printed to PDF by browser
+        response = HttpResponse(html, content_type='text/html')
+        return response

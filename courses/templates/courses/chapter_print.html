@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ course.title }} - {{ chapter.title }}</title>
+    <style>
+        @media print {
+            @page {
+                size: A4;
+                margin: 2cm;
+            }
+            
+            body {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            
+            .no-print {
+                display: none;
+            }
+            
+            .page-break {
+                page-break-after: always;
+            }
+            
+            code, pre {
+                page-break-inside: avoid;
+            }
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            border-bottom: 3px solid #4F46E5;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            color: #4F46E5;
+            font-size: 2em;
+            margin-bottom: 0.5em;
+        }
+        
+        h2 {
+            color: #1F2937;
+            font-size: 1.5em;
+            margin-top: 0;
+            margin-bottom: 0.5em;
+        }
+        
+        h3 {
+            color: #374151;
+            font-size: 1.25em;
+            margin-top: 1.5em;
+            margin-bottom: 0.75em;
+        }
+        
+        .description {
+            color: #6B7280;
+            font-size: 1.1em;
+            margin-bottom: 1em;
+        }
+        
+        .meta {
+            color: #9CA3AF;
+            font-size: 0.9em;
+            font-style: italic;
+        }
+        
+        .content-block {
+            margin-bottom: 2em;
+            padding: 1em;
+        }
+        
+        .text-block {
+            background-color: #F9FAFB;
+            border-left: 4px solid #E5E7EB;
+            padding: 1.5em;
+        }
+        
+        .code-block {
+            background-color: #1F2937;
+            color: #F3F4F6;
+            padding: 1.5em;
+            border-radius: 8px;
+            margin: 1.5em 0;
+            page-break-inside: avoid;
+        }
+        
+        .code-block-title {
+            background-color: #374151;
+            color: white;
+            padding: 0.75em 1em;
+            border-radius: 8px 8px 0 0;
+            font-weight: bold;
+            margin-bottom: 0;
+        }
+        
+        .code-block pre {
+            margin: 0;
+            padding: 1em;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        
+        .code-block code {
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+        
+        .quiz-block {
+            background-color: #FEF3C7;
+            border-left: 4px solid #F59E0B;
+            padding: 1.5em;
+            page-break-inside: avoid;
+        }
+        
+        .quiz-block h3 {
+            color: #92400E;
+            margin-top: 0;
+        }
+        
+        .exercise-block {
+            background-color: #D1FAE5;
+            border-left: 4px solid #10B981;
+            padding: 1.5em;
+            page-break-inside: avoid;
+        }
+        
+        .exercise-block h3 {
+            color: #065F46;
+            margin-top: 0;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1em 0;
+            page-break-inside: avoid;
+        }
+        
+        th, td {
+            border: 1px solid #D1D5DB;
+            padding: 0.75em;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #F3F4F6;
+            font-weight: bold;
+        }
+        
+        code {
+            background-color: #F3F4F6;
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #DC2626;
+        }
+        
+        ul, ol {
+            margin: 0.5em 0;
+            padding-left: 2em;
+        }
+        
+        li {
+            margin: 0.5em 0;
+        }
+        
+        strong {
+            color: #111827;
+        }
+        
+        .print-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #4F46E5;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+        
+        .print-button:hover {
+            background-color: #4338CA;
+        }
+        
+        @media print {
+            .print-button {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button onclick="window.print()" class="print-button no-print">🖨️ Imprimer en PDF</button>
+    
+    <div class="header">
+        <h1>{{ course.title }}</h1>
+        <h2>{{ chapter.title }}</h2>
+        <p class="description">{{ chapter.description }}</p>
+        <p class="meta">Généré le {{ generated_date }}</p>
+    </div>
+    
+    {% for block in content_blocks %}
+        {% if block.type == 'TEXT' %}
+            <div class="content-block text-block">
+                {% if block.title %}
+                    <h3>{{ block.title }}</h3>
+                {% endif %}
+                {{ block.content_markdown|safe }}
+            </div>
+            
+        {% elif block.type == 'CODE_SAMPLE' %}
+            <div class="content-block">
+                {% if block.title %}
+                    <div class="code-block-title">💻 {{ block.title }}</div>
+                {% endif %}
+                <div class="code-block">
+                    <pre><code>{{ block.content_markdown }}</code></pre>
+                </div>
+            </div>
+            
+        {% elif block.type == 'QUIZ' %}
+            <div class="content-block quiz-block">
+                <h3>🎯 {{ block.title|default:"Quiz" }}</h3>
+                {{ block.content_markdown|safe }}
+            </div>
+            
+        {% elif block.type == 'EXERCISE' %}
+            <div class="content-block exercise-block">
+                <h3>✏️ {{ block.title|default:"Exercice" }}</h3>
+                {{ block.content_markdown|safe }}
+                <div class="code-block" style="margin-top: 1em;">
+                    <pre><code># Espace pour votre solution
+
+</code></pre>
+                </div>
+            </div>
+        {% endif %}
+    {% endfor %}
+    
+    <div style="margin-top: 3em; padding-top: 2em; border-top: 2px solid #E5E7EB; color: #6B7280; font-size: 0.9em;">
+        <p>© 2025 Portail NSI - {{ course.title }}</p>
+        <p>Document généré le {{ generated_date }}</p>
+    </div>
+</body>
+</html>
