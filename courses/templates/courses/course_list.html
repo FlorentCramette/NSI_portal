@@ -11,24 +11,24 @@
 
     <!-- Filter buttons -->
     <div class="mb-6 flex gap-2">
-        <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+        <button onclick="filterCourses('all')" class="filter-btn px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
             Tous
         </button>
-        <button class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
+        <button onclick="filterCourses('SNT (Seconde)')" class="filter-btn px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
             SNT (Seconde)
         </button>
-        <button class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
+        <button onclick="filterCourses('NSI Première')" class="filter-btn px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
             NSI Première
         </button>
-        <button class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
+        <button onclick="filterCourses('NSI Terminale')" class="filter-btn px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
             NSI Terminale
         </button>
     </div>
 
     <!-- Courses grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div id="courses-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {% for course in courses %}
-        <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition overflow-hidden">
+        <div class="course-card bg-white rounded-lg shadow-md hover:shadow-lg transition overflow-hidden" data-level="{{ course.get_level_display }}">
             <div class="h-48 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
                 <span class="text-6xl">{{ course.icon }}</span>
             </div>
@@ -77,4 +77,29 @@
         {% endfor %}
     </div>
 </div>
+
+<script>
+function filterCourses(level) {
+    const cards = document.querySelectorAll('.course-card');
+    const buttons = document.querySelectorAll('.filter-btn');
+    
+    // Update button styles
+    buttons.forEach(btn => {
+        btn.classList.remove('bg-blue-600', 'text-white');
+        btn.classList.add('bg-gray-200', 'text-gray-700');
+    });
+    event.target.classList.remove('bg-gray-200', 'text-gray-700');
+    event.target.classList.add('bg-blue-600', 'text-white');
+    
+    // Filter courses
+    cards.forEach(card => {
+        if (level === 'all') {
+            card.style.display = '';
+        } else {
+            const cardLevel = card.getAttribute('data-level');
+            card.style.display = cardLevel === level ? '' : 'none';
+        }
+    });
+}
+</script>
 {% endblock %}
