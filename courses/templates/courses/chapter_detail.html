@@ -160,8 +160,8 @@
                         {{ item.block.title }}
                     </h3>
                     {% endif %}
-                    <div id="quiz-{{ item.block.id }}" class="quiz-container" data-quiz-content="{{ item.html_content|escapejs }}">
-                        {{ item.html_content|safe }}
+                    <div id="quiz-{{ item.block.id }}" class="quiz-container space-y-6">
+                        <!-- Quiz content will be rendered by JavaScript -->
                     </div>
                     <div class="mt-4 flex gap-3">
                         <button onclick="checkQuiz{{ item.block.id }}()" 
@@ -178,86 +178,111 @@
 
                 <script>
                 (function() {
+                    const rawContent = `{{ item.block.content_markdown|escapejs }}`;
                     const quizContainer = document.getElementById('quiz-{{ item.block.id }}');
                     const resultDiv = document.getElementById('quiz-result-{{ item.block.id }}');
                     
-                    // Parse quiz content and make it interactive
-                    function initQuiz() {
-                        const lists = quizContainer.querySelectorAll('ul');
-                        lists.forEach((list, qIndex) => {
-                            const prevElement = list.previousElementSibling;
-                            if (prevElement && prevElement.tagName === 'P' && prevElement.textContent.includes('Question')) {
-                                list.classList.add('space-y-2', 'mt-3');
-                                const items = list.querySelectorAll('li');
-                                items.forEach((item, optIndex) => {
-                                    const text = item.innerHTML;
-                                    const isCorrect = text.includes('✓') || text.includes('✅');
-                                    const cleanText = text.replace(/✓|✅/g, '').trim();
-                                    
-                                    item.className = 'quiz-option cursor-pointer p-3 bg-white rounded border-2 border-gray-300 hover:border-yellow-500 transition flex items-center gap-3';
-                                    item.innerHTML = `
-                                        <input type="radio" 
-                                               name="quiz-{{ item.block.id }}-q${qIndex}" 
-                                               value="${optIndex}"
-                                               data-correct="${isCorrect}"
-                                               class="w-5 h-5 text-yellow-600 cursor-pointer">
-                                        <label class="flex-1 cursor-pointer">${cleanText}</label>
-                                    `;
-                                    
-                                    item.addEventListener('click', function(e) {
-                                        if (e.target.tagName !== 'INPUT') {
-                                            const radio = this.querySelector('input[type="radio"]');
-                                            radio.checked = true;
-                                        }
-                                    });
+                    // Parse quiz content from markdown
+                    function parseAndRenderQuiz() {
+                        const lines = rawContent.split('\n');
+                        let currentQuestion = null;
+                        let questions = [];
+                        
+                        lines.forEach(line => {
+                            line = line.trim();
+                            if (line.startsWith('**Question')) {
+                                if (currentQuestion) {
+                                    questions.push(currentQuestion);
+                                }
+                                currentQuestion = {
+                                    text: line.replace(/\*\*/g, ''),
+                                    options: []
+                                };
+                            } else if (line.startsWith('- ') && currentQuestion) {
+                                const optText = line.substring(2).trim();
+                                const isCorrect = optText.includes('✓') || optText.includes('✅');
+                                currentQuestion.options.push({
+                                    text: optText.replace(/✓|✅/g, '').trim(),
+                                    isCorrect: isCorrect
                                 });
                             }
+                        });
+                        if (currentQuestion) {
+                            questions.push(currentQuestion);
+                        }
+                        
+                        // Render questions
+                        quizContainer.innerHTML = questions.map((q, qIndex) => `
+                            <div class="question-block">
+                                <p class="font-bold text-lg text-gray-800 mb-3">${q.text}</p>
+                                <div class="space-y-2">
+                                    ${q.options.map((opt, optIndex) => `
+                                        <div class="quiz-option cursor-pointer p-3 bg-white rounded border-2 border-gray-300 hover:border-yellow-500 transition flex items-center gap-3"
+                                             data-question="${qIndex}" 
+                                             data-option="${optIndex}"
+                                             data-correct="${opt.isCorrect}">
+                                            <input type="radio" 
+                                                   name="quiz-{{ item.block.id }}-q${qIndex}" 
+                                                   value="${optIndex}"
+                                                   class="w-5 h-5 text-yellow-600 cursor-pointer">
+                                            <label class="flex-1 cursor-pointer">${opt.text}</label>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        `).join('');
+                        
+                        // Add click handlers
+                        document.querySelectorAll('#quiz-{{ item.block.id }} .quiz-option').forEach(opt => {
+                            opt.addEventListener('click', function(e) {
+                                if (e.target.tagName !== 'INPUT') {
+                                    const radio = this.querySelector('input[type="radio"]');
+                                    radio.checked = true;
+                                }
+                            });
                         });
                     }
                     
                     window.checkQuiz{{ item.block.id }} = function() {
-                        const questions = quizContainer.querySelectorAll('ul');
-                        let totalQuestions = 0;
-                        let correctAnswers = 0;
+                        const options = quizContainer.querySelectorAll('.quiz-option');
+                        const questions = {};
                         
-                        questions.forEach((list, qIndex) => {
-                            const prevElement = list.previousElementSibling;
-                            if (prevElement && prevElement.textContent.includes('Question')) {
-                                totalQuestions++;
-                                const selectedRadio = list.querySelector(`input[name="quiz-{{ item.block.id }}-q${qIndex}"]:checked`);
-                                const options = list.querySelectorAll('li');
-                                
-                                options.forEach(opt => {
-                                    opt.classList.remove('border-green-500', 'bg-green-50', 'border-red-500', 'bg-red-50');
-                                    opt.classList.add('border-gray-300');
-                                });
-                                
-                                if (selectedRadio) {
-                                    const isCorrect = selectedRadio.dataset.correct === 'true';
-                                    const parentLi = selectedRadio.closest('li');
-                                    
-                                    if (isCorrect) {
-                                        correctAnswers++;
-                                        parentLi.classList.remove('border-gray-300');
-                                        parentLi.classList.add('border-green-500', 'bg-green-50');
-                                    } else {
-                                        parentLi.classList.remove('border-gray-300');
-                                        parentLi.classList.add('border-red-500', 'bg-red-50');
-                                        
-                                        // Highlight correct answer
-                                        options.forEach(opt => {
-                                            const radio = opt.querySelector('input[type="radio"]');
-                                            if (radio && radio.dataset.correct === 'true') {
-                                                opt.classList.remove('border-gray-300');
-                                                opt.classList.add('border-green-500', 'bg-green-50');
-                                            }
-                                        });
-                                    }
+                        options.forEach(opt => {
+                            const qNum = opt.dataset.question;
+                            if (!questions[qNum]) {
+                                questions[qNum] = { total: 0, answered: false, correct: false };
+                            }
+                            questions[qNum].total++;
+                            
+                            const radio = opt.querySelector('input[type="radio"]');
+                            const isCorrect = opt.dataset.correct === 'true';
+                            
+                            opt.classList.remove('border-green-500', 'bg-green-50', 'border-red-500', 'bg-red-50');
+                            opt.classList.add('border-gray-300');
+                            
+                            if (radio.checked) {
+                                questions[qNum].answered = true;
+                                if (isCorrect) {
+                                    questions[qNum].correct = true;
+                                    opt.classList.remove('border-gray-300');
+                                    opt.classList.add('border-green-500', 'bg-green-50');
+                                } else {
+                                    opt.classList.remove('border-gray-300');
+                                    opt.classList.add('border-red-500', 'bg-red-50');
                                 }
+                            }
+                            
+                            // Show correct answer if user answered wrong
+                            if (questions[qNum].answered && !questions[qNum].correct && isCorrect) {
+                                opt.classList.remove('border-gray-300');
+                                opt.classList.add('border-green-500', 'bg-green-50', 'ring-2', 'ring-green-300');
                             }
                         });
                         
+                        const totalQuestions = Object.keys(questions).length;
+                        const correctAnswers = Object.values(questions).filter(q => q.correct).length;
                         const percentage = totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0;
+                        
                         resultDiv.classList.remove('hidden');
                         
                         if (percentage === 100) {
@@ -281,14 +306,14 @@
                         
                         const options = quizContainer.querySelectorAll('.quiz-option');
                         options.forEach(opt => {
-                            opt.classList.remove('border-green-500', 'bg-green-50', 'border-red-500', 'bg-red-50');
+                            opt.classList.remove('border-green-500', 'bg-green-50', 'border-red-500', 'bg-red-50', 'ring-2', 'ring-green-300');
                             opt.classList.add('border-gray-300');
                         });
                         
                         resultDiv.classList.add('hidden');
                     };
                     
-                    initQuiz();
+                    parseAndRenderQuiz();
                 })();
                 </script>
 
