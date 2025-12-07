@@ -108,6 +108,25 @@ else:
         if result.returncode != 0 and result.stderr:
             print(f"⚠️ {cmd} warning: {result.stderr}")
 
+    # Populate NSI 1ère courses
+    nsi_commands = [
+        "populate_nsi_python",
+        "populate_nsi_algorithmique",
+        "populate_nsi_representation"
+    ]
+    
+    for cmd in nsi_commands:
+        print(f"\nPopulating {cmd}...")
+        result = subprocess.run(
+            ["python", "manage.py", cmd],
+            capture_output=True,
+            text=True
+        )
+        if result.stdout:
+            print(result.stdout)
+        if result.returncode != 0 and result.stderr:
+            print(f"⚠️ {cmd} warning: {result.stderr}")
+
     # Collect static files
     print("\nCollecting static files...")
     run_command("python manage.py collectstatic --noinput --clear")
@@ -128,3 +147,4 @@ else:
         "--log-level", "info"
     ]
     os.execvp("gunicorn", gunicorn_cmd)
+
