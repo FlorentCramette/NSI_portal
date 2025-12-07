@@ -4,7 +4,7 @@ import sys
 import subprocess
 
 def run_command(cmd):
-    ""\"Run a command and exit if it fails""\"
+    """Run a command and exit if it fails"""
     print(f"\n{'='*60}")
     print(f"Running: {cmd}")
     print('='*60)
@@ -24,7 +24,7 @@ if __name__ == "__main__":
         result = subprocess.run(
             [
                 "python", "manage.py", "shell", "-c",
-                ""\"
+                """
 from accounts.models import User
 username = '{username}'
 email = '{email}'
