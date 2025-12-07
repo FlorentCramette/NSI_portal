@@ -15,6 +15,7 @@ class Command(BaseCommand):
         chapter1 = Chapter.objects.create(
             course=course,
             title="Le Modele OSI",
+            slug="le-modele-osi",
             description="Comprendre les 7 couches du modele OSI",
             order=1
         )
@@ -169,6 +170,7 @@ print("\\nDonnees recues:", paquet.paquet)
         chapter2 = Chapter.objects.create(
             course=course,
             title="Le Protocole TCP/IP",
+            slug="le-protocole-tcp-ip",
             description="Fonctionnement de TCP et IP",
             order=2
         )
@@ -332,6 +334,7 @@ print(f"Adresse reseau: {calculer_adresse_reseau(ip, masque)}")
         chapter3 = Chapter.objects.create(
             course=course,
             title="Le Routage",
+            slug="le-routage",
             description="Comment les paquets trouvent leur chemin",
             order=3
         )

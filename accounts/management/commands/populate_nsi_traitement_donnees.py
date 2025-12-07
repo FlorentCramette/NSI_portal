@@ -15,6 +15,7 @@ class Command(BaseCommand):
         chapter1 = Chapter.objects.create(
             course=course,
             title="Tables de donnees",
+            slug="tables-de-donnees",
             description="Manipulation et analyse de tables de donnees structurees",
             order=1
         )

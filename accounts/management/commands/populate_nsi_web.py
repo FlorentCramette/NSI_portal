@@ -15,6 +15,7 @@ class Command(BaseCommand):
         chapter1 = Chapter.objects.create(
             course=course,
             title="HTML et Structure du Web",
+            slug="html-et-structure-du-web",
             description="Decouverte du langage HTML et de la structure des pages web",
             order=1
         )

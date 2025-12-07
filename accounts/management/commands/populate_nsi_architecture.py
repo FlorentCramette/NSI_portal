@@ -15,6 +15,7 @@ class Command(BaseCommand):
         chapter1 = Chapter.objects.create(
             course=course,
             title="Le Processeur (CPU)",
+            slug="le-processeur-cpu",
             description="Composants et fonctionnement du processeur",
             order=1
         )
@@ -178,6 +179,7 @@ cpu.run()
         chapter2 = Chapter.objects.create(
             course=course,
             title="La Memoire",
+            slug="la-memoire",
             description="Types de memoire et hierarchie",
             order=2
         )
@@ -337,6 +339,7 @@ print(f"\\nHits: {cache.hits}, Misses: {cache.misses}")
         chapter3 = Chapter.objects.create(
             course=course,
             title="Architecture de Von Neumann",
+            slug="architecture-de-von-neumann",
             description="Le modele fondamental des ordinateurs modernes",
             order=3
         )
