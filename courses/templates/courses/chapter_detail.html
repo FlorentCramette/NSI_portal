@@ -46,21 +46,21 @@
 
     <!-- Content Blocks -->
     <div class="space-y-8">
-        {% for block in chapter.content_blocks.all %}
-            {% if block.type == 'TEXT' %}
+        {% for item in content_blocks %}
+            {% if item.block.type == 'TEXT' %}
                 <!-- Text Block -->
                 <div class="prose prose-lg max-w-none bg-white rounded-lg shadow-sm p-6">
-                    {% if block.title %}
-                    <h2 class="text-2xl font-bold text-gray-900 mb-4">{{ block.title }}</h2>
+                    {% if item.block.title %}
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4">{{ item.block.title }}</h2>
                     {% endif %}
-                    {{ block.content_markdown|safe }}
+                    {{ item.html_content|safe }}
                 </div>
 
-            {% elif block.type == 'CODE_SAMPLE' %}
+            {% elif item.block.type == 'CODE_SAMPLE' %}
                 <!-- Interactive Code Block -->
                 <div class="my-8">
-                    {% if block.title %}
-                    <h3 class="text-xl font-bold text-gray-900 mb-4">{{ block.title }}</h3>
+                    {% if item.block.title %}
+                    <h3 class="text-xl font-bold text-gray-900 mb-4">{{ item.block.title }}</h3>
                     {% endif %}
                     
                     <div class="interactive-code-block border border-gray-300 rounded-lg overflow-hidden shadow-lg">
@@ -75,25 +75,25 @@
                         </div>
                         
                         <div class="relative bg-gray-50">
-                            <textarea id="editor{{ block.id }}" class="code-editor font-mono text-sm w-full p-4 border-0 focus:ring-2 focus:ring-blue-500" rows="12" spellcheck="false">{{ block.content_markdown }}</textarea>
+                            <textarea id="editor{{ item.block.id }}" class="code-editor font-mono text-sm w-full p-4 border-0 focus:ring-2 focus:ring-blue-500" rows="12" spellcheck="false">{{ item.block.content_markdown }}</textarea>
                         </div>
                         
-                        <div id="output-container{{ block.id }}" class="hidden">
+                        <div id="output-container{{ item.block.id }}" class="hidden">
                             <div class="bg-gradient-to-r from-blue-50 to-blue-100 px-4 py-2 border-t border-gray-300">
                                 <span class="font-semibold text-blue-900 flex items-center">
                                     <span class="mr-2">📤</span>
                                     Résultat de l'exécution
                                 </span>
                             </div>
-                            <pre id="output{{ block.id }}" class="code-output p-4 bg-white text-sm font-mono whitespace-pre-wrap border-t border-gray-200"></pre>
+                            <pre id="output{{ item.block.id }}" class="code-output p-4 bg-white text-sm font-mono whitespace-pre-wrap border-t border-gray-200"></pre>
                         </div>
                     </div>
 
                     <script>
-                    function runCode{{ block.id }}() {
-                        const editor = document.getElementById('editor{{ block.id }}');
-                        const outputContainer = document.getElementById('output-container{{ block.id }}');
-                        const output = document.getElementById('output{{ block.id }}');
+                    function runCode{{ item.block.id }}() {
+                        const editor = document.getElementById('editor{{ item.block.id }}');
+                        const outputContainer = document.getElementById('output-container{{ item.block.id }}');
+                        const output = document.getElementById('output{{ item.block.id }}');
                         const button = event.target;
                         
                         outputContainer.classList.remove('hidden');
@@ -139,7 +139,7 @@
                     }
                     
                     // Tab support
-                    document.getElementById('editor{{ block.id }}').addEventListener('keydown', function(e) {
+                    document.getElementById('editor{{ item.block.id }}').addEventListener('keydown', function(e) {
                         if (e.key === 'Tab') {
                             e.preventDefault();
                             const start = this.selectionStart;
@@ -151,47 +151,47 @@
                     </script>
                 </div>
 
-            {% elif block.type == 'QUIZ' %}
+            {% elif item.block.type == 'QUIZ' %}
                 <!-- Quiz Block -->
                 <div class="bg-yellow-50 border-l-4 border-yellow-400 rounded-lg p-6 my-8 shadow-sm">
-                    {% if block.title %}
+                    {% if item.block.title %}
                     <h3 class="text-xl font-bold text-yellow-900 mb-4 flex items-center">
                         <span class="text-2xl mr-2">🎯</span>
-                        {{ block.title }}
+                        {{ item.block.title }}
                     </h3>
                     {% endif %}
                     <div class="prose">
-                        {{ block.content_markdown|safe }}
+                        {{ item.html_content|safe }}
                     </div>
                 </div>
 
-            {% elif block.type == 'EXERCISE' %}
+            {% elif item.block.type == 'EXERCISE' %}
                 <!-- Exercise Block -->
                 <div class="bg-green-50 border-l-4 border-green-400 rounded-lg p-6 my-8 shadow-sm">
-                    {% if block.title %}
+                    {% if item.block.title %}
                     <h3 class="text-xl font-bold text-green-900 mb-4 flex items-center">
                         <span class="text-2xl mr-2">✏️</span>
-                        {{ block.title }}
+                        {{ item.block.title }}
                     </h3>
                     {% endif %}
                     <div class="prose">
-                        {{ block.content_markdown|safe }}
+                        {{ item.html_content|safe }}
                     </div>
                 </div>
 
-            {% elif block.type == 'VIDEO' %}
+            {% elif item.block.type == 'VIDEO' %}
                 <!-- Video Block -->
                 <div class="my-8 bg-white rounded-lg shadow-sm overflow-hidden">
-                    {% if block.title %}
+                    {% if item.block.title %}
                     <div class="bg-gray-100 px-6 py-3 border-b">
                         <h3 class="text-xl font-bold text-gray-900 flex items-center">
                             <span class="text-2xl mr-2">🎥</span>
-                            {{ block.title }}
+                            {{ item.block.title }}
                         </h3>
                     </div>
                     {% endif %}
                     <div class="aspect-w-16 aspect-h-9 bg-gray-900">
-                        {{ block.content_markdown|safe }}
+                        {{ item.html_content|safe }}
                     </div>
                 </div>
 
