@@ -42,7 +42,10 @@ class SubmitAttemptView(LoginRequiredMixin, View):
     def post(self, request, pk):
         try:
             data = json.loads(request.body)
-            exercise = get_object_or_404(Exercise, pk=pk)
+            exercise = get_object_or_404(
+                Exercise.objects.select_related('chapter', 'chapter__course'),
+                pk=pk
+            )
             user = request.user
             
             passed = data.get('passed', False)
@@ -59,26 +62,33 @@ class SubmitAttemptView(LoginRequiredMixin, View):
             )
             
             # Award XP if passed for the first time
-            if passed and not exercise.attempts.filter(user=user, passed=True).exclude(pk=attempt.pk).exists():
-                user.add_xp(exercise.xp_reward)
+            xp_awarded = 0
+            if passed:
+                # Check if first pass (optimized with exists())
+                is_first_pass = not Attempt.objects.filter(
+                    user=user,
+                    exercise=exercise,
+                    passed=True
+                ).exclude(pk=attempt.pk).exists()
                 
-                # Check for badges and achievements
-                from gamification.models import Badge
-                from gamification.utils import check_achievements, update_user_streak
-                
-                # Check badges
-                for badge in Badge.objects.filter(is_active=True):
-                    badge.check_and_award(user)
-                
-                # Check achievements
-                check_achievements(user)
-                
-                # Update streak
-                update_user_streak(user)
-                
-                xp_awarded = exercise.xp_reward
-            else:
-                xp_awarded = 0
+                if is_first_pass:
+                    user.add_xp(exercise.xp_reward)
+                    
+                    # Check for badges and achievements (can be moved to async task)
+                    from gamification.models import Badge
+                    from gamification.utils import check_achievements, update_user_streak
+                    
+                    # Check only active badges
+                    for badge in Badge.objects.filter(is_active=True).only('id', 'code', 'xp_requirement'):
+                        badge.check_and_award(user)
+                    
+                    # Check achievements
+                    check_achievements(user)
+                    
+                    # Update streak
+                    update_user_streak(user)
+                    
+                    xp_awarded = exercise.xp_reward
             
             return JsonResponse({
                 'success': True,

@@ -48,7 +48,31 @@ if __name__ == "__main__":
     run_command("python manage.py collectstatic --noinput --clear")
 
     port = os.environ.get('PORT', '8000')
-    workers = os.environ.get('WEB_CONCURRENCY', '3')
-    print(f"\nStarting Gunicorn on port {port} with {workers} workers...")
-    os.execvp("gunicorn", ["gunicorn", "nsi_project.wsgi:application", "--bind", f"0.0.0.0:{port}", "--workers", workers, "--timeout", "120", "--access-logfile", "-", "--error-logfile", "-", "--log-level", "info"])
+    workers = int(os.environ.get('WEB_CONCURRENCY', '4'))  # 2*CPU+1 recommandé
+    threads = int(os.environ.get('GUNICORN_THREADS', '2'))
+    worker_connections = 1000
+    max_requests = 1000
+    max_requests_jitter = 50
+    keepalive = 5
+    
+    print(f"\nStarting Gunicorn on port {port}")
+    print(f"Workers: {workers}, Threads: {threads}, Worker connections: {worker_connections}")
+    
+    os.execvp("gunicorn", [
+        "gunicorn",
+        "nsi_project.wsgi:application",
+        "--bind", f"0.0.0.0:{port}",
+        "--workers", str(workers),
+        "--worker-class", "gthread",
+        "--threads", str(threads),
+        "--worker-connections", str(worker_connections),
+        "--max-requests", str(max_requests),
+        "--max-requests-jitter", str(max_requests_jitter),
+        "--keepalive", str(keepalive),
+        "--timeout", "120",
+        "--graceful-timeout", "30",
+        "--access-logfile", "-",
+        "--error-logfile", "-",
+        "--log-level", "info"
+    ])
 

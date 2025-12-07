@@ -19,7 +19,9 @@ class CourseListView(LoginRequiredMixin, ListView):
     context_object_name = 'courses'
     
     def get_queryset(self):
-        return Course.objects.filter(is_published=True).prefetch_related('chapters')
+        return Course.objects.filter(is_published=True).prefetch_related(
+            Prefetch('chapters', queryset=Chapter.objects.filter(is_published=True))
+        )
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -43,7 +45,9 @@ class CourseDetailView(LoginRequiredMixin, DetailView):
     slug_url_kwarg = 'slug'
 
     def get_queryset(self):
-        return Course.objects.filter(is_published=True).prefetch_related('chapters')
+        return Course.objects.filter(is_published=True).prefetch_related(
+            Prefetch('chapters', queryset=Chapter.objects.filter(is_published=True).order_by('order'))
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

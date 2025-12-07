@@ -1,0 +1,19 @@
+# Requirements pour optimisations de performance optionnelles
+# Ces packages améliorent les performances mais ne sont pas obligatoires
+
+# Cache Redis (recommandé pour production)
+django-redis==5.4.0
+redis==5.0.1
+
+# Rate limiting
+django-ratelimit==4.1.0
+
+# Monitoring et debug
+sentry-sdk==1.39.2
+
+# Tâches asynchrones (optionnel)
+celery==5.3.4
+celery[redis]
+
+# Tests de charge
+locust==2.20.0
