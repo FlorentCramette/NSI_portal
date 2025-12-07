@@ -4,7 +4,6 @@ import sys
 import subprocess
 
 def run_command(cmd):
-    """Run a command and exit if it fails"""
     print(f"\n{'='*60}")
     print(f"Running: {cmd}")
     print('='*60)
@@ -15,136 +14,38 @@ def run_command(cmd):
     return result
 
 if __name__ == "__main__":
-    # Run migrations
     run_command("python manage.py migrate --noinput")
 
-    # Create superuser if it doesn't exist
     if os.environ.get('DJANGO_SUPERUSER_USERNAME'):
         print("\nCreating/updating superuser...")
         result = subprocess.run(
-            [
-                "python", "manage.py", "shell", "-c",
-                """
-from accounts.models import User
-username = '{username}'
-email = '{email}'
-password = '{password}'
+            ["python", "manage.py", "shell", "-c",
+             "from accounts.models import User; username = '{}'; email = '{}'; password = '{}'; user, created = User.objects.get_or_create(username=username, defaults={{'email': email, 'is_student': False, 'is_teacher': True}}); user.set_password(password); user.is_superuser = True; user.is_staff = True; user.is_student = False; user.is_teacher = True; user.save(); print('Superuser ready')".format(
+                 os.environ.get('DJANGO_SUPERUSER_USERNAME'),
+                 os.environ.get('DJANGO_SUPERUSER_EMAIL'),
+                 os.environ.get('DJANGO_SUPERUSER_PASSWORD'))],
+            capture_output=True, text=True)
+        if result.stdout: print(result.stdout)
 
-user, created = User.objects.get_or_create(
-    username=username,
-    defaults={{'email': email, 'is_student': False, 'is_teacher': True}}
-)
-if created:
-    user.set_password(password)
-    user.is_superuser = True
-    user.is_staff = True
-    user.save()
-    print('✅ Superuser created successfully')
-else:
-    user.is_superuser = True
-    user.is_staff = True
-    user.is_student = False
-    user.is_teacher = True
-    user.set_password(password)
-    user.save()
-    print('✅ Superuser updated successfully')
-                """.format(
-                    username=os.environ.get('DJANGO_SUPERUSER_USERNAME'),
-                    email=os.environ.get('DJANGO_SUPERUSER_EMAIL'),
-                    password=os.environ.get('DJANGO_SUPERUSER_PASSWORD')
-                )
-            ],
-            capture_output=True,
-            text=True
-        )
-        if result.stdout:
-            print(result.stdout)
-        if result.returncode != 0 and result.stderr:
-            print(f"⚠️ Superuser creation warning: {result.stderr}")
-
-    # Create initial course content
     print("\nCreating course content...")
-    result = subprocess.run(
-        ["python", "manage.py", "create_snt_content", "--clean"],
-        capture_output=True,
-        text=True
-    )
-    if result.stdout:
-        print(result.stdout)
-    if result.returncode != 0 and result.stderr:
-        print(f"⚠️ Course creation warning: {result.stderr}")
+    subprocess.run(["python", "manage.py", "create_snt_content", "--clean"], capture_output=True, text=True)
 
-    # Populate interactive content for Python course
-    print("\nPopulating interactive Python content...")
-    result = subprocess.run(
-        ["python", "manage.py", "populate_python_content"],
-        capture_output=True,
-        text=True
-    )
-    if result.stdout:
-        print(result.stdout)
-    if result.returncode != 0 and result.stderr:
-        print(f"⚠️ Content population warning: {result.stderr}")
+    print("\nPopulating Python content...")
+    subprocess.run(["python", "manage.py", "populate_python_content"], capture_output=True, text=True)
 
-    # Populate SNT courses
-    snt_commands = [
-        "populate_snt_internet",
-        "populate_snt_web",
-        "populate_snt_donnees",
-        "populate_snt_reseaux_sociaux",
-        "populate_snt_photo",
-        "populate_snt_localisation"
-    ]
-    
+    snt_commands = ["populate_snt_internet", "populate_snt_web", "populate_snt_donnees", "populate_snt_reseaux_sociaux", "populate_snt_photo", "populate_snt_localisation"]
     for cmd in snt_commands:
         print(f"\nPopulating {cmd}...")
-        result = subprocess.run(
-            ["python", "manage.py", cmd],
-            capture_output=True,
-            text=True
-        )
-        if result.stdout:
-            print(result.stdout)
-        if result.returncode != 0 and result.stderr:
-            print(f"⚠️ {cmd} warning: {result.stderr}")
+        subprocess.run(["python", "manage.py", cmd], capture_output=True, text=True)
 
-    # Populate NSI 1ère courses
-    nsi_commands = [
-        "populate_nsi_python",
-        "populate_nsi_algorithmique",
-        "populate_nsi_representation"
-    ]
-    
+    nsi_commands = ["populate_nsi_python", "populate_nsi_algorithmique", "populate_nsi_representation", "populate_nsi_web", "populate_nsi_traitement_donnees", "populate_nsi_architecture", "populate_nsi_reseaux"]
     for cmd in nsi_commands:
         print(f"\nPopulating {cmd}...")
-        result = subprocess.run(
-            ["python", "manage.py", cmd],
-            capture_output=True,
-            text=True
-        )
-        if result.stdout:
-            print(result.stdout)
-        if result.returncode != 0 and result.stderr:
-            print(f"⚠️ {cmd} warning: {result.stderr}")
+        subprocess.run(["python", "manage.py", cmd], capture_output=True, text=True)
 
-    # Collect static files
-    print("\nCollecting static files...")
     run_command("python manage.py collectstatic --noinput --clear")
 
-    # Start Gunicorn
     port = os.environ.get('PORT', '8000')
     workers = os.environ.get('WEB_CONCURRENCY', '3')
-
     print(f"\nStarting Gunicorn on port {port} with {workers} workers...")
-    gunicorn_cmd = [
-        "gunicorn",
-        "nsi_project.wsgi:application",
-        "--bind", f"0.0.0.0:{port}",
-        "--workers", workers,
-        "--timeout", "120",
-        "--access-logfile", "-",
-        "--error-logfile", "-",
-        "--log-level", "info"
-    ]
-    os.execvp("gunicorn", gunicorn_cmd)
-
+    os.execvp("gunicorn", ["gunicorn", "nsi_project.wsgi:application", "--bind", f"0.0.0.0:{port}", "--workers", workers, "--timeout", "120", "--access-logfile", "-", "--error-logfile", "-", "--log-level", "info"])
