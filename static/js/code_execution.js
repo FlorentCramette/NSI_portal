@@ -1,12 +1,17 @@
 // Python code execution using Pyodide
 let pyodide = null;
 
-async function loadPyodide() {
+async function loadPyodideRuntime() {
     if (pyodide) return pyodide;
     
     try {
-        pyodide = await loadPyodide({
-            indexURL: "https://cdn.jsdelivr.net/pyodide/v0.24.1/full/"
+        // Use window.loadPyodide provided by the CDN
+        if (typeof window.loadPyodide === 'undefined') {
+            throw new Error('Pyodide not loaded. Make sure pyodide.js is included in your HTML.');
+        }
+        
+        pyodide = await window.loadPyodide({
+            indexURL: "https://cdn.jsdelivr.net/pyodide/v0.25.0/full/"
         });
         console.log("Pyodide loaded successfully");
         return pyodide;
@@ -19,7 +24,7 @@ async function loadPyodide() {
 async function runPythonCode(code) {
     try {
         if (!pyodide) {
-            await loadPyodide();
+            await loadPyodideRuntime();
         }
         
         // Capture stdout
@@ -52,7 +57,7 @@ sys.stdout = io.StringIO()
 async function runPythonTests(code, tests) {
     try {
         if (!pyodide) {
-            await loadPyodide();
+            await loadPyodideRuntime();
         }
         
         // Run user code

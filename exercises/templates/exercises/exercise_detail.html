@@ -137,7 +137,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sql.js@1.8.0/dist/sql-wasm.js"></script>
 <script src="{% static 'js/code_execution.js' %}"></script>
 
@@ -152,10 +152,11 @@ async function runCode() {
     const output = document.getElementById('output');
     
     outputContainer.classList.remove('hidden');
-    output.textContent = 'Exécution en cours...';
+    output.classList.remove('text-red-600');
     
     try {
         if (exerciseType === 'PYTHON') {
+            output.textContent = '⏳ Chargement de Python (première fois peut prendre ~10s)...';
             const result = await runPythonCode(code);
             if (result.success) {
                 output.textContent = result.output || '(pas de sortie)';
