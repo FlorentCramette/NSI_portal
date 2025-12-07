@@ -4,7 +4,7 @@ import sys
 import subprocess
 
 def run_command(cmd):
-    """Run a command and exit if it fails"""
+    ""\"Run a command and exit if it fails""\"
     print(f"\n{'='*60}")
     print(f"Running: {cmd}")
     print('='*60)
@@ -21,11 +21,10 @@ if __name__ == "__main__":
     # Create superuser if it doesn't exist
     if os.environ.get('DJANGO_SUPERUSER_USERNAME'):
         print("\nCreating/updating superuser...")
-        # Use Django management command with proper environment
         result = subprocess.run(
             [
                 "python", "manage.py", "shell", "-c",
-                """
+                ""\"
 from accounts.models import User
 username = '{username}'
 email = '{email}'
@@ -42,7 +41,6 @@ if created:
     user.save()
     print('✅ Superuser created successfully')
 else:
-    # Update existing user to ensure it's a superuser
     user.is_superuser = True
     user.is_staff = True
     user.is_student = False
@@ -88,6 +86,28 @@ else:
     if result.returncode != 0 and result.stderr:
         print(f"⚠️ Content population warning: {result.stderr}")
 
+    # Populate SNT courses
+    snt_commands = [
+        "populate_snt_internet",
+        "populate_snt_web",
+        "populate_snt_donnees",
+        "populate_snt_reseaux_sociaux",
+        "populate_snt_photo",
+        "populate_snt_localisation"
+    ]
+    
+    for cmd in snt_commands:
+        print(f"\nPopulating {cmd}...")
+        result = subprocess.run(
+            ["python", "manage.py", cmd],
+            capture_output=True,
+            text=True
+        )
+        if result.stdout:
+            print(result.stdout)
+        if result.returncode != 0 and result.stderr:
+            print(f"⚠️ {cmd} warning: {result.stderr}")
+
     # Collect static files
     print("\nCollecting static files...")
     run_command("python manage.py collectstatic --noinput --clear")
@@ -108,4 +128,3 @@ else:
         "--log-level", "info"
     ]
     os.execvp("gunicorn", gunicorn_cmd)
-
