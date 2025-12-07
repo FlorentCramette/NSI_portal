@@ -20,8 +20,11 @@ def check_achievements(user):
     """Check and award achievements based on user activity"""
     achievements_awarded = []
     
+    # Count distinct exercises passed
+    exercises_passed = user.attempts.filter(passed=True).values('exercise').distinct().count()
+    
     # First exercise completed
-    if user.attempts.filter(passed=True).count() == 1:
+    if exercises_passed == 1:
         achievement, created = Achievement.objects.get_or_create(
             code='FIRST_EXERCISE',
             defaults={
@@ -31,13 +34,13 @@ def check_achievements(user):
                 'xp_reward': 50
             }
         )
-        if created or not UserAchievement.objects.filter(user=user, achievement=achievement).exists():
-            UserAchievement.objects.get_or_create(user=user, achievement=achievement)
+        if not UserAchievement.objects.filter(user=user, achievement=achievement).exists():
+            UserAchievement.objects.create(user=user, achievement=achievement)
             user.add_xp(achievement.xp_reward)
             achievements_awarded.append(achievement)
     
     # 10 exercises completed
-    if user.attempts.filter(passed=True).values('exercise').distinct().count() == 10:
+    if exercises_passed >= 10:
         achievement, created = Achievement.objects.get_or_create(
             code='TEN_EXERCISES',
             defaults={
@@ -47,8 +50,41 @@ def check_achievements(user):
                 'xp_reward': 100
             }
         )
-        if created or not UserAchievement.objects.filter(user=user, achievement=achievement).exists():
-            UserAchievement.objects.get_or_create(user=user, achievement=achievement)
+        if not UserAchievement.objects.filter(user=user, achievement=achievement).exists():
+            UserAchievement.objects.create(user=user, achievement=achievement)
+            user.add_xp(achievement.xp_reward)
+            achievements_awarded.append(achievement)
+    
+    # Perfect score achievement
+    latest_attempt = user.attempts.filter(passed=True).order_by('-created_at').first()
+    if latest_attempt and latest_attempt.score == 100:
+        achievement, created = Achievement.objects.get_or_create(
+            code='PERFECT_SCORE',
+            defaults={
+                'name': 'Perfectionniste',
+                'description': 'Obtenir un score parfait',
+                'icon': '💯',
+                'xp_reward': 75
+            }
+        )
+        if not UserAchievement.objects.filter(user=user, achievement=achievement).exists():
+            UserAchievement.objects.create(user=user, achievement=achievement)
+            user.add_xp(achievement.xp_reward)
+            achievements_awarded.append(achievement)
+    
+    # Week streak achievement
+    if hasattr(user, 'streak') and user.streak.current_streak >= 7:
+        achievement, created = Achievement.objects.get_or_create(
+            code='WEEK_STREAK',
+            defaults={
+                'name': 'Régulier',
+                'description': 'Connexion 7 jours d\'affilée',
+                'icon': '🔥',
+                'xp_reward': 150
+            }
+        )
+        if not UserAchievement.objects.filter(user=user, achievement=achievement).exists():
+            UserAchievement.objects.create(user=user, achievement=achievement)
             user.add_xp(achievement.xp_reward)
             achievements_awarded.append(achievement)
     

@@ -63,11 +63,18 @@ class SubmitAttemptView(LoginRequiredMixin, View):
                 user.add_xp(exercise.xp_reward)
                 
                 # Check for badges and achievements
-                from gamification.models import Badge, Achievement
+                from gamification.models import Badge
+                from gamification.utils import check_achievements, update_user_streak
                 
                 # Check badges
                 for badge in Badge.objects.filter(is_active=True):
                     badge.check_and_award(user)
+                
+                # Check achievements
+                check_achievements(user)
+                
+                # Update streak
+                update_user_streak(user)
                 
                 xp_awarded = exercise.xp_reward
             else:

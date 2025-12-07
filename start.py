@@ -32,6 +32,8 @@ if __name__ == "__main__":
 
     print("\nPopulating Python content...")
     subprocess.run(["python", "manage.py", "populate_python_content"], capture_output=True, text=True)
+    print("\nInitializing gamification...")
+    subprocess.run(["python", "manage.py", "init_gamification"], capture_output=True, text=True)
 
     snt_commands = ["populate_snt_internet", "populate_snt_web", "populate_snt_donnees", "populate_snt_reseaux_sociaux", "populate_snt_photo", "populate_snt_localisation"]
     for cmd in snt_commands:
@@ -49,3 +51,4 @@ if __name__ == "__main__":
     workers = os.environ.get('WEB_CONCURRENCY', '3')
     print(f"\nStarting Gunicorn on port {port} with {workers} workers...")
     os.execvp("gunicorn", ["gunicorn", "nsi_project.wsgi:application", "--bind", f"0.0.0.0:{port}", "--workers", workers, "--timeout", "120", "--access-logfile", "-", "--error-logfile", "-", "--log-level", "info"])
+
