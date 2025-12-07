@@ -181,7 +181,8 @@ cpu.run()
             title="La Memoire",
             slug="la-memoire",
             description="Types de memoire et hierarchie",
-            order=2
+            order=2,
+            is_published=True
         )
         
         ContentBlock.objects.create(
@@ -341,7 +342,10 @@ print(f"\\nHits: {cache.hits}, Misses: {cache.misses}")
             title="Architecture de Von Neumann",
             slug="architecture-de-von-neumann",
             description="Le modele fondamental des ordinateurs modernes",
-            order=3
+            order=3,
+            is_published=True
+        )
+            is_published=True
         )
         
         ContentBlock.objects.create(

@@ -17,7 +17,8 @@ class Command(BaseCommand):
             title="Tables de donnees",
             slug="tables-de-donnees",
             description="Manipulation et analyse de tables de donnees structurees",
-            order=1
+            order=1,
+            is_published=True
         )
         
         ContentBlock.objects.create(
@@ -236,6 +237,8 @@ for emp in hauts_salaires:
             title="Recherche et tri dans les donnees",
             description="Algorithmes de recherche et de tri appliques aux tables",
             order=2
+        ,
+            is_published=True
         )
         
         ContentBlock.objects.create(
@@ -466,6 +469,8 @@ print(f"  Stock total: {stock_total} unites")""",
             title="Visualisation de donnees",
             description="Creer des graphiques et representations visuelles des donnees",
             order=3
+        ,
+            is_published=True
         )
         
         ContentBlock.objects.create(

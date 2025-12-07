@@ -17,7 +17,8 @@ class Command(BaseCommand):
             title="Le Modele OSI",
             slug="le-modele-osi",
             description="Comprendre les 7 couches du modele OSI",
-            order=1
+            order=1,
+            is_published=True
         )
         
         ContentBlock.objects.create(
@@ -172,7 +173,8 @@ print("\\nDonnees recues:", paquet.paquet)
             title="Le Protocole TCP/IP",
             slug="le-protocole-tcp-ip",
             description="Fonctionnement de TCP et IP",
-            order=2
+            order=2,
+            is_published=True
         )
         
         ContentBlock.objects.create(
@@ -336,7 +338,8 @@ print(f"Adresse reseau: {calculer_adresse_reseau(ip, masque)}")
             title="Le Routage",
             slug="le-routage",
             description="Comment les paquets trouvent leur chemin",
-            order=3
+            order=3,
+            is_published=True
         )
         
         ContentBlock.objects.create(

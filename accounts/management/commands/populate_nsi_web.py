@@ -17,7 +17,8 @@ class Command(BaseCommand):
             title="HTML et Structure du Web",
             slug="html-et-structure-du-web",
             description="Decouverte du langage HTML et de la structure des pages web",
-            order=1
+            order=1,
+            is_published=True
         )
         
         ContentBlock.objects.create(
@@ -187,6 +188,8 @@ Les balises peuvent avoir des attributs :
             title="CSS et Mise en Forme",
             description="Apprendre a styliser les pages web avec CSS",
             order=2
+        ,
+            is_published=True
         )
         
         ContentBlock.objects.create(
@@ -420,6 +423,8 @@ article:hover {
             title="Protocoles Web et Securite",
             description="Comprendre HTTP, HTTPS et les enjeux de securite sur le web",
             order=3
+        ,
+            is_published=True
         )
         
         ContentBlock.objects.create(
