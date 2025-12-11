@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnostic - NSI Portal</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+        .test-section h2 {
+            color: #667eea;
+            margin-top: 0;
+        }
+        .test-result {
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .code {
+            background-color: #282c34;
+            color: #abb2bf;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        #loading {
+            text-align: center;
+            padding: 20px;
+            font-size: 18px;
+            color: #667eea;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .summary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+            text-align: center;
+        }
+        .summary h2 {
+            color: white;
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Diagnostic NSI Portal</h1>
+        <div id="loading">
+            <div class="spinner"></div>
+            <p>Exécution des tests de diagnostic...</p>
+        </div>
+        <div id="results"></div>
+        <div class="test-section">
+            <h2>Test Manuel Python</h2>
+            <div class="code" id="python-code" contenteditable="true">print("Hello from Skulpt!")
+for i in range(5):
+    print(f"Nombre: {i}")</div>
+            <button onclick="testPythonManual()">▶ Exécuter le code</button>
+            <div id="manual-output"></div>
+        </div>
+    </div>
+
+    <script src="../static/js/python_runner.js"></script>
+    <script>
+        const results = document.getElementById('results');
+        const loading = document.getElementById('loading');
+        let totalTests = 0;
+        let passedTests = 0;
+
+        function addResult(title, success, message, details = '') {
+            totalTests++;
+            if (success) passedTests++;
+
+            const div = document.createElement('div');
+            div.className = `test-result ${success ? 'success' : 'error'}`;
+            div.innerHTML = `
+                <span style="font-size: 24px;">${success ? '✅' : '❌'}</span>
+                <div style="flex: 1;">
+                    <strong>${title}</strong>
+                    <div style="margin-top: 5px;">${message}</div>
+                    ${details ? `<div class="code" style="margin-top: 10px; font-size: 12px;">${details}</div>` : ''}
+                </div>
+            `;
+            results.appendChild(div);
+        }
+
+        function addInfo(title, message) {
+            const div = document.createElement('div');
+            div.className = 'test-result info';
+            div.innerHTML = `
+                <span style="font-size: 24px;">ℹ️</span>
+                <div style="flex: 1;">
+                    <strong>${title}</strong>
+                    <div style="margin-top: 5px;">${message}</div>
+                </div>
+            `;
+            results.appendChild(div);
+        }
+
+        function addSection(title) {
+            const section = document.createElement('div');
+            section.className = 'test-section';
+            section.innerHTML = `<h2>${title}</h2>`;
+            results.appendChild(section);
+            return section;
+        }
+
+        async function runDiagnostics() {
+            // Test 1: Vérifier si python_runner.js est chargé
+            addSection('1. Chargement des scripts');
+            if (typeof runPythonCode === 'function') {
+                addResult('runPythonCode', true, 'Fonction runPythonCode disponible');
+            } else {
+                addResult('runPythonCode', false, 'Fonction runPythonCode NON disponible', 'Le fichier python_runner.js n\'est pas chargé correctement');
+                return;
+            }
+
+            if (typeof runPythonTests === 'function') {
+                addResult('runPythonTests', true, 'Fonction runPythonTests disponible');
+            } else {
+                addResult('runPythonTests', false, 'Fonction runPythonTests NON disponible');
+            }
+
+            // Test 2: Chargement de Skulpt
+            addSection('2. Chargement de Skulpt');
+            try {
+                await new Promise((resolve, reject) => {
+                    setTimeout(() => {
+                        if (typeof Sk !== 'undefined') {
+                            resolve();
+                        } else {
+                            const checkInterval = setInterval(() => {
+                                if (typeof Sk !== 'undefined') {
+                                    clearInterval(checkInterval);
+                                    resolve();
+                                }
+                            }, 100);
+                            setTimeout(() => {
+                                clearInterval(checkInterval);
+                                reject(new Error('Timeout'));
+                            }, 5000);
+                        }
+                    }, 100);
+                });
+                addResult('Skulpt', true, 'Skulpt chargé avec succès', `Version disponible: ${typeof Sk !== 'undefined' ? 'Oui' : 'Non'}`);
+            } catch (e) {
+                addResult('Skulpt', false, 'Skulpt n\'a pas pu être chargé', e.message);
+            }
+
+            // Test 3: Exécution Python simple
+            addSection('3. Tests d\'exécution Python');
+            try {
+                const result1 = await runPythonCode('print("Test 1: Hello World")');
+                if (result1.success && result1.output.includes('Hello World')) {
+                    addResult('Print simple', true, 'Print fonctionne correctement', `Sortie: ${result1.output}`);
+                } else {
+                    addResult('Print simple', false, 'Print ne fonctionne pas', `Error: ${result1.error || 'Sortie incorrecte'}`);
+                }
+            } catch (e) {
+                addResult('Print simple', false, 'Exception levée', e.message);
+            }
+
+            // Test 4: Calculs
+            try {
+                const result2 = await runPythonCode('x = 5 + 3\nprint(x)');
+                if (result2.success && result2.output.trim() === '8') {
+                    addResult('Calculs', true, 'Les calculs fonctionnent', `Sortie: ${result2.output}`);
+                } else {
+                    addResult('Calculs', false, 'Problème avec les calculs', `Attendu: 8, Reçu: ${result2.output}`);
+                }
+            } catch (e) {
+                addResult('Calculs', false, 'Exception levée', e.message);
+            }
+
+            // Test 5: Boucles
+            try {
+                const result3 = await runPythonCode('for i in range(3):\n    print(i)');
+                if (result3.success && result3.output.includes('0') && result3.output.includes('1') && result3.output.includes('2')) {
+                    addResult('Boucles', true, 'Les boucles fonctionnent', `Sortie: ${result3.output}`);
+                } else {
+                    addResult('Boucles', false, 'Problème avec les boucles', `Sortie: ${result3.output || result3.error}`);
+                }
+            } catch (e) {
+                addResult('Boucles', false, 'Exception levée', e.message);
+            }
+
+            // Test 6: Fonctions
+            try {
+                const result4 = await runPythonCode('def double(x):\n    return x * 2\nprint(double(21))');
+                if (result4.success && result4.output.trim() === '42') {
+                    addResult('Fonctions', true, 'Les fonctions fonctionnent', `Sortie: ${result4.output}`);
+                } else {
+                    addResult('Fonctions', false, 'Problème avec les fonctions', `Sortie: ${result4.output || result4.error}`);
+                }
+            } catch (e) {
+                addResult('Fonctions', false, 'Exception levée', e.message);
+            }
+
+            // Test 7: Tests unitaires
+            addSection('4. Tests unitaires');
+            try {
+                const code = 'def add(a, b):\n    return a + b';
+                const tests = [
+                    {name: 'add(2, 3)', code: 'add(2, 3)', expected: 5},
+                    {name: 'add(10, 20)', code: 'add(10, 20)', expected: 30}
+                ];
+                const result5 = await runPythonTests(code, tests);
+                if (result5.success && result5.allPassed) {
+                    addResult('Tests unitaires', true, 'Tous les tests unitaires passent', `${result5.results.length} tests réussis`);
+                } else {
+                    addResult('Tests unitaires', false, 'Certains tests ont échoué', JSON.stringify(result5.results, null, 2));
+                }
+            } catch (e) {
+                addResult('Tests unitaires', false, 'Exception levée', e.message);
+            }
+
+            // Test 8: Gestion d'erreurs
+            addSection('5. Gestion des erreurs');
+            try {
+                const result6 = await runPythonCode('x = 1 / 0');
+                if (!result6.success && result6.error) {
+                    addResult('Division par zéro', true, 'Erreur correctement capturée', `Erreur: ${result6.error.substring(0, 100)}...`);
+                } else {
+                    addResult('Division par zéro', false, 'Erreur non détectée', 'La division par zéro devrait lever une erreur');
+                }
+            } catch (e) {
+                addResult('Division par zéro', true, 'Exception correctement levée', e.message);
+            }
+
+            // Résumé final
+            loading.style.display = 'none';
+            const summary = document.createElement('div');
+            summary.className = 'summary';
+            const percentage = Math.round((passedTests / totalTests) * 100);
+            summary.innerHTML = `
+                <h2>📊 Résumé du diagnostic</h2>
+                <p style="font-size: 32px; margin: 20px 0;">${passedTests} / ${totalTests} tests réussis</p>
+                <p style="font-size: 24px; font-weight: bold;">${percentage}%</p>
+                ${percentage === 100 ? 
+                    '<p style="font-size: 18px; margin-top: 20px;">✅ Tous les systèmes fonctionnent parfaitement!</p>' :
+                    percentage >= 75 ?
+                    '<p style="font-size: 18px; margin-top: 20px;">⚠️ La plupart des fonctionnalités fonctionnent, quelques ajustements nécessaires.</p>' :
+                    '<p style="font-size: 18px; margin-top: 20px;">❌ Des problèmes importants ont été détectés.</p>'
+                }
+            `;
+            results.appendChild(summary);
+        }
+
+        async function testPythonManual() {
+            const codeElement = document.getElementById('python-code');
+            const outputDiv = document.getElementById('manual-output');
+            const code = codeElement.textContent;
+
+            outputDiv.innerHTML = '<div class="spinner"></div><p>Exécution...</p>';
+
+            try {
+                const result = await runPythonCode(code);
+                if (result.success) {
+                    outputDiv.innerHTML = `
+                        <div class="test-result success">
+                            <span style="font-size: 24px;">✅</span>
+                            <div style="flex: 1;">
+                                <strong>Exécution réussie</strong>
+                                <div class="code" style="margin-top: 10px;">${result.output || '(Aucune sortie)'}</div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    outputDiv.innerHTML = `
+                        <div class="test-result error">
+                            <span style="font-size: 24px;">❌</span>
+                            <div style="flex: 1;">
+                                <strong>Erreur d'exécution</strong>
+                                <div class="code" style="margin-top: 10px;">${result.error}</div>
+                            </div>
+                        </div>
+                    `;
+                }
+            } catch (e) {
+                outputDiv.innerHTML = `
+                    <div class="test-result error">
+                        <span style="font-size: 24px;">❌</span>
+                        <div style="flex: 1;">
+                            <strong>Exception</strong>
+                            <div class="code" style="margin-top: 10px;">${e.message}</div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Lancer les diagnostics au chargement
+        window.addEventListener('load', () => {
+            setTimeout(runDiagnostics, 500);
+        });
+    </script>
+</body>
+</html>

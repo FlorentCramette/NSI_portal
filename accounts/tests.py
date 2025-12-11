@@ -1,11 +1,17 @@
 """
 Tests for accounts models
 """
+from typing import TYPE_CHECKING
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from accounts.models import Classroom, Enrollment
 
-User = get_user_model()
+if TYPE_CHECKING:
+    from accounts.models import User
+    UserType = User
+else:
+    User = get_user_model()
+    UserType = User
 
 
 class UserModelTest(TestCase):
@@ -91,11 +97,16 @@ class ClassroomModelTest(TestCase):
             role=User.Role.STUDENT
         )
         
-        enrollment = Enrollment.objects.create(
+        Enrollment.objects.create(
             user=student,
             classroom=self.classroom
         )
         
-        self.assertEqual(self.classroom.students.count(), 1)
-        self.assertEqual(self.classroom.students.first(), student)
-        self.assertEqual(student.classrooms.first(), self.classroom)
+        # Test using the get_students() method
+        students = self.classroom.get_students()
+        self.assertEqual(students.count(), 1)
+        self.assertEqual(students.first(), student)
+        
+        # Test reverse relation through enrollment
+        self.assertEqual(student.enrollments.count(), 1)
+        self.assertEqual(student.enrollments.first().classroom, self.classroom)

@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Tests de diagnostic{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 py-8">
+    <h1 class="text-4xl font-bold text-gray-900 mb-8">🔍 Diagnostic complet</h1>
+    
+    <div id="diagnostic-results" class="space-y-6"></div>
+    
+    <!-- Test Quiz -->
+    <div class="bg-yellow-50 border-l-4 border-yellow-400 rounded-lg p-6 my-8">
+        <h2 class="text-2xl font-bold mb-4">Test Quiz</h2>
+        <div id="test-quiz" class="space-y-4">
+            <div class="question-block">
+                <p class="font-bold text-lg mb-3">Question 1: Quelle est la capitale de la France?</p>
+                <div class="space-y-2">
+                    <div class="quiz-option cursor-pointer p-3 bg-white rounded border-2 border-gray-300 hover:border-yellow-500 transition"
+                         onclick="selectOption(this, true)">
+                        <input type="radio" name="q1" class="mr-3">
+                        <label class="cursor-pointer">Paris ✓</label>
+                    </div>
+                    <div class="quiz-option cursor-pointer p-3 bg-white rounded border-2 border-gray-300 hover:border-yellow-500 transition"
+                         onclick="selectOption(this, false)">
+                        <input type="radio" name="q1" class="mr-3">
+                        <label class="cursor-pointer">Londres</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <button onclick="checkTestQuiz()" class="mt-4 bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-2 rounded-lg">
+            Vérifier
+        </button>
+        <div id="quiz-result" class="hidden mt-4 p-4 rounded-lg"></div>
+    </div>
+
+    <!-- Test Python Interactif -->
+    <div class="bg-blue-50 border-l-4 border-blue-400 rounded-lg p-6 my-8">
+        <h2 class="text-2xl font-bold mb-4">Test Éditeur Python</h2>
+        <div class="bg-gray-800 text-white p-4 rounded-t-lg flex justify-between items-center">
+            <span>🐍 Python Interactif</span>
+            <button onclick="runTestPython()" class="bg-green-600 hover:bg-green-700 px-6 py-2 rounded-lg">
+                ▶ Exécuter
+            </button>
+        </div>
+        <textarea id="python-editor" class="w-full p-4 font-mono bg-gray-50 border-2 border-gray-300 rounded-b-lg" rows="8">print("Test depuis Django template")
+x = 10
+y = 20
+print(f"La somme de {x} + {y} = {x + y}")
+
+for i in range(5):
+    print(f"Compteur: {i}")</textarea>
+        <div id="python-output-container" class="hidden mt-4">
+            <div class="bg-blue-100 px-4 py-2 rounded-t-lg">
+                <span class="font-semibold">📤 Sortie</span>
+            </div>
+            <pre id="python-output" class="p-4 bg-white border-2 border-blue-300 rounded-b-lg"></pre>
+        </div>
+    </div>
+</div>
+
+<script src="{% static 'js/python_runner.js' %}"></script>
+<script>
+    const diagnosticResults = document.getElementById('diagnostic-results');
+
+    function addDiagnostic(title, status, message) {
+        const colors = {
+            success: 'bg-green-50 border-green-500 text-green-800',
+            error: 'bg-red-50 border-red-500 text-red-800',
+            warning: 'bg-yellow-50 border-yellow-500 text-yellow-800',
+            info: 'bg-blue-50 border-blue-500 text-blue-800'
+        };
+
+        const icons = {
+            success: '✅',
+            error: '❌',
+            warning: '⚠️',
+            info: 'ℹ️'
+        };
+
+        const div = document.createElement('div');
+        div.className = `p-4 rounded-lg border-l-4 ${colors[status]}`;
+        div.innerHTML = `
+            <div class="flex items-start gap-3">
+                <span class="text-2xl">${icons[status]}</span>
+                <div>
+                    <h3 class="font-bold text-lg">${title}</h3>
+                    <p class="mt-1">${message}</p>
+                </div>
+            </div>
+        `;
+        diagnosticResults.appendChild(div);
+    }
+
+    // Tests au chargement
+    window.addEventListener('load', async function() {
+        // Test 1: Vérifier si les scripts sont chargés
+        if (typeof runPythonCode === 'function') {
+            addDiagnostic('Script Python Runner', 'success', 'python_runner.js chargé correctement');
+        } else {
+            addDiagnostic('Script Python Runner', 'error', 'python_runner.js NON chargé - Les éditeurs Python ne fonctionneront pas');
+            return;
+        }
+
+        // Test 2: Vérifier Skulpt
+        await new Promise(resolve => setTimeout(resolve, 500));
+        if (typeof Sk !== 'undefined') {
+            addDiagnostic('Bibliothèque Skulpt', 'success', 'Skulpt chargé et prêt');
+        } else {
+            addDiagnostic('Bibliothèque Skulpt', 'warning', 'Skulpt en cours de chargement...');
+        }
+
+        // Test 3: Test rapide d'exécution
+        try {
+            const result = await runPythonCode('print("Test")');
+            if (result.success) {
+                addDiagnostic('Exécution Python', 'success', 'Python fonctionne correctement');
+            } else {
+                addDiagnostic('Exécution Python', 'error', `Erreur: ${result.error}`);
+            }
+        } catch (e) {
+            addDiagnostic('Exécution Python', 'error', `Exception: ${e.message}`);
+        }
+
+        // Test 4: Vérifier les fichiers statiques
+        const img = new Image();
+        img.onload = function() {
+            addDiagnostic('Fichiers statiques', 'success', 'Les fichiers statiques sont correctement servis');
+        };
+        img.onerror = function() {
+            addDiagnostic('Fichiers statiques', 'warning', 'Possible problème avec les fichiers statiques');
+        };
+        img.src = "{% static 'css/custom.css' %}";
+    });
+
+    // Fonction pour tester le quiz
+    function selectOption(element, isCorrect) {
+        const radio = element.querySelector('input[type="radio"]');
+        radio.checked = true;
+        element.dataset.correct = isCorrect;
+    }
+
+    function checkTestQuiz() {
+        const options = document.querySelectorAll('#test-quiz .quiz-option');
+        const resultDiv = document.getElementById('quiz-result');
+        let correct = false;
+
+        options.forEach(opt => {
+            const radio = opt.querySelector('input[type="radio"]');
+            if (radio.checked && opt.dataset.correct === 'true') {
+                correct = true;
+                opt.classList.add('border-green-500', 'bg-green-50');
+            } else if (radio.checked) {
+                opt.classList.add('border-red-500', 'bg-red-50');
+            }
+        });
+
+        resultDiv.classList.remove('hidden');
+        if (correct) {
+            resultDiv.className = 'mt-4 p-4 rounded-lg bg-green-100 border-2 border-green-500 text-green-800';
+            resultDiv.textContent = '✅ Correct! Le quiz fonctionne.';
+        } else {
+            resultDiv.className = 'mt-4 p-4 rounded-lg bg-red-100 border-2 border-red-500 text-red-800';
+            resultDiv.textContent = '❌ Incorrect. Essayez encore.';
+        }
+    }
+
+    // Fonction pour tester l'éditeur Python
+    async function runTestPython() {
+        const editor = document.getElementById('python-editor');
+        const outputContainer = document.getElementById('python-output-container');
+        const output = document.getElementById('python-output');
+
+        outputContainer.classList.remove('hidden');
+        output.textContent = '⏳ Exécution en cours...';
+        output.classList.remove('text-red-600');
+
+        try {
+            const result = await runPythonCode(editor.value);
+
+            if (result.success) {
+                output.textContent = result.output || '(Aucune sortie)';
+                addDiagnostic('Test éditeur Python', 'success', 'L\'éditeur fonctionne correctement!');
+            } else {
+                output.textContent = '❌ Erreur:\n' + result.error;
+                output.classList.add('text-red-600');
+                addDiagnostic('Test éditeur Python', 'error', result.error);
+            }
+        } catch (e) {
+            output.textContent = '❌ Exception:\n' + e.message;
+            output.classList.add('text-red-600');
+            addDiagnostic('Test éditeur Python', 'error', e.message);
+        }
+    }
+</script>
+{% endblock %}
