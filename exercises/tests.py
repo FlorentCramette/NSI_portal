@@ -53,15 +53,14 @@ class ExerciseModelTest(TestCase):
         attempt = Attempt.objects.create(
             exercise=self.exercise,
             user=self.user,
-            submitted_code='def test():\n    return 42',
+            attempt_data={'code': 'def test():\n    return 42', 'xp_earned': 10},
             score=100,
-            passed=True,
-            xp_earned=10
+            passed=True
         )
         
         self.assertEqual(attempt.score, 100)
         self.assertTrue(attempt.passed)
-        self.assertEqual(attempt.xp_earned, 10)
+        self.assertEqual(attempt.attempt_data['xp_earned'], 10)
         self.assertEqual(self.user.attempts.count(), 1)
     
     def test_attempt_failed(self):
@@ -69,14 +68,13 @@ class ExerciseModelTest(TestCase):
         attempt = Attempt.objects.create(
             exercise=self.exercise,
             user=self.user,
-            submitted_code='def test():\n    return None',
+            attempt_data={'code': 'def test():\n    return None', 'xp_earned': 0},
             score=0,
-            passed=False,
-            xp_earned=0
+            passed=False
         )
         
         self.assertFalse(attempt.passed)
-        self.assertEqual(attempt.xp_earned, 0)
+        self.assertEqual(attempt.attempt_data['xp_earned'], 0)
     
     def test_hint_usage(self):
         """Test hint usage tracking"""
@@ -92,5 +90,5 @@ class ExerciseModelTest(TestCase):
             hint=hint
         )
         
-        self.assertEqual(self.user.hints_used.count(), 1)
+        self.assertEqual(self.user.hint_usages.count(), 1)
         self.assertEqual(usage.hint.content, 'This is a hint')
