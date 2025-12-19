@@ -71,8 +71,8 @@ if __name__ == "__main__":
         "--keepalive", str(keepalive),
         "--timeout", "120",
         "--graceful-timeout", "30",
-        "--access-logfile", "-",
+        "--access-logfile", "/dev/null",  # Disable access logs to avoid Railway rate limit
         "--error-logfile", "-",
-        "--log-level", "info"
+        "--log-level", "warning"  # Only log warnings and errors
     ])
 
